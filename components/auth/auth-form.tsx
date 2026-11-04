@@ -26,7 +26,7 @@ type Step = "email" | "username" | "code";
 const RESEND_SECONDS = 60;
 const REGISTER_STEPS: Exclude<Step, "code">[] = ["email", "username"];
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({ mode, telegramClientId }: { mode: Mode; telegramClientId?: string }) {
   const router = useRouter();
   const isRegister = mode === "register";
 
@@ -280,7 +280,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {requestCode.isPending ? "Sending code…" : isLastStep ? "Send code" : "Continue"}
       </button>
 
-      {!isRegister && step === "email" && <TelegramLogin />}
+      {!isRegister && step === "email" && <TelegramLogin clientId={telegramClientId} />}
 
       {step === "email" && (
         <p className="qo-auth-switch">
