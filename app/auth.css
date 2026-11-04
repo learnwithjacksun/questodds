@@ -1,0 +1,148 @@
+/* Auth screens: same hero artwork as the landing page */
+.qo-auth {
+  position: relative;
+  min-height: 100svh;
+  padding: 96px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  isolation: isolate;
+  overflow: hidden;
+}
+.qo-auth-logo { position: absolute; top: 19px; left: 36px; }
+.qo-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-soft);
+  border-radius: 28px;
+  padding: 36px 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+}
+.qo-auth-disclaimer { max-width: 440px; margin: 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+.qo-auth-step { display: flex; flex-direction: column; align-items: stretch; }
+.qo-auth-step > .qo-icon-badge { margin-bottom: 16px; }
+.qo-auth-title { margin: 0 0 8px; font-size: 32px; font-weight: 600; letter-spacing: -0.05em; line-height: 1.1; }
+.qo-auth-sub { margin: 0 0 24px; font-size: 15px; line-height: 1.45; color: var(--muted); }
+.qo-auth-sub strong { color: var(--text); font-weight: 600; word-break: break-all; }
+
+.qo-label { margin: 0 0 6px; font-size: 13px; font-weight: 500; }
+.qo-input {
+  width: 100%;
+  height: 52px;
+  margin-bottom: 6px;
+  padding: 0 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  font: 400 16px var(--font-geist-sans), sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.qo-input:focus { border-color: var(--text); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06); }
+.qo-input.is-invalid { border-color: #e5484d; }
+.qo-field-error { margin: 0 0 12px; font-size: 13px; color: #e5484d; }
+.qo-hint { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+.qo-auth-btn { width: 100%; margin-top: 14px; border: 0; cursor: pointer; }
+.qo-auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.qo-auth-switch { margin: 20px 0 0; text-align: center; font-size: 14px; color: var(--muted); }
+.qo-auth-switch a { color: var(--text); font-weight: 600; }
+
+.qo-back,
+.qo-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: 500 14px var(--font-geist-sans), sans-serif;
+  color: var(--muted);
+  cursor: pointer;
+}
+.qo-back { margin-bottom: 20px; }
+.qo-back:hover, .qo-link-btn:not(:disabled):hover { color: var(--text); }
+.qo-link-btn { align-self: center; margin-top: 16px; }
+.qo-link-btn:disabled { cursor: default; opacity: 0.7; }
+
+/* Registration progress */
+.qo-progress { display: flex; gap: 6px; margin-bottom: 24px; }
+.qo-progress span {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  transition: background-color 0.3s;
+}
+.qo-progress span.is-done,
+.qo-progress span.is-active { background: var(--text); }
+.qo-progress span.is-active { background: linear-gradient(90deg, var(--text) 55%, rgba(0, 0, 0, 0.35)); }
+
+/* Date of birth: day / month / year */
+.qo-dob { display: grid; grid-template-columns: 1fr 1.9fr 1.3fr; gap: 10px; margin-bottom: 8px; }
+.qo-dob-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.qo-dob-field label { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.qo-dob-control {
+  width: 100%;
+  height: 56px;
+  padding: 0 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  font: 500 18px var(--font-geist-sans), sans-serif;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.qo-dob-day .qo-dob-control,
+.qo-dob-year .qo-dob-control { text-align: center; }
+.qo-dob-control::placeholder { color: rgba(0, 0, 0, 0.25); font-weight: 500; }
+.qo-dob-control:focus { border-color: var(--text); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06); }
+.qo-dob-control.is-invalid { border-color: #e5484d; }
+.qo-select { position: relative; }
+.qo-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  font-size: 16px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+.qo-select svg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+/* 4-digit code boxes */
+.qo-otp { display: flex; gap: 12px; justify-content: center; margin-bottom: 8px; }
+.qo-otp-box {
+  width: 64px;
+  height: 72px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  background: #fff;
+  text-align: center;
+  font: 600 28px var(--font-geist-sans), sans-serif;
+  color: var(--text);
+  outline: none;
+  caret-color: transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.qo-otp-box:focus { border-color: var(--text); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06); }
+.qo-otp-box.is-invalid { border-color: #e5484d; }
+.qo-otp-box:disabled { opacity: 0.6; }
+.qo-auth-step > .qo-field-error { text-align: center; }
+
+@media (max-width: 809px) {
+  .qo-auth { padding: 88px 16px 24px; }
+  .qo-auth-logo { left: 20px; top: 20px; }
+  .qo-auth-card { padding: 28px 20px; border-radius: 24px; }
+  .qo-auth-title { font-size: 28px; }
+  .qo-otp { gap: 8px; }
+  .qo-otp-box { width: 100%; max-width: 64px; height: 64px; font-size: 24px; }
+}
