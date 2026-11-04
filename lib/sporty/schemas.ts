@@ -43,6 +43,18 @@ export const subscriptionResponseSchema = z.object({
 });
 
 /* ---------- Telegram ---------- */
+/** Payload posted by the Telegram Login Widget. Loose: the hash covers every field Telegram sent. */
+export const telegramAuthPayloadSchema = z.looseObject({
+  id: z.coerce.number().int().positive(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  username: z.string().optional(),
+  photo_url: z.string().optional(),
+  auth_date: z.coerce.number().int(),
+  hash: z.string().min(1),
+});
+export type TelegramAuthPayload = z.infer<typeof telegramAuthPayloadSchema>;
+
 export const telegramUserSchema = z.object({
   id: z.string(),
   firstName: z.string().nullish(),

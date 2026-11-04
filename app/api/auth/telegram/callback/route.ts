@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
@@ -7,22 +6,16 @@ import { createSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import {
   appOrigin,
-  decodeTgAuthSession,
-  exchangeTelegramCode,
-  TG_CALLBACK_PATH,
+  parseTelegramIntent,
+  verifyWidgetPayload,
+  widgetPayloadFromSearchParams,
   TG_STATE_COOKIE,
 } from "@/lib/telegram";
 
-function sameState(a: string, b: string): boolean {
-  const x = Buffer.from(a);
-  const y = Buffer.from(b);
-  return x.length === y.length && timingSafeEqual(x, y);
-}
-
 /**
- * Telegram redirects here. "login" signs in an account that already linked this Telegram;
- * "link" attaches it to the signed-in account. Accounts are never created from Telegram, because
- * registration is where the 18+ confirmation happens.
+ * Completes Telegram login/link after the client return page turns #tgAuthResult into query params.
+ * "login" signs in an account that already linked this Telegram; "link" attaches it to the
+ * signed-in account. Accounts are never created from Telegram (18+ confirmation is on register).
  */
 export async function GET(req: Request) {
   const origin = appOrigin(req);
@@ -32,31 +25,25 @@ export async function GET(req: Request) {
   const saved = jar.get(TG_STATE_COOKIE)?.value ?? "";
   jar.delete({ name: TG_STATE_COOKIE, path: "/api/auth/telegram" });
 
-  const session = decodeTgAuthSession(saved);
-  const home = session?.intent === "link" ? "/dashboard/settings" : "/login";
+  const intent = parseTelegramIntent(saved);
+  const home = intent === "link" ? "/dashboard/settings" : "/login";
   const go = (path: string, code: string) =>
     NextResponse.redirect(new URL(`${path}?tg=${code}`, origin));
 
-  if (!session || !sameState(session.state, params.get("state") ?? "")) {
-    return go("/login", "expired");
-  }
+  if (!intent) return go("/login", "expired");
   if (params.get("error")) return go(home, "denied");
 
-  const code = params.get("code");
-  if (!code) return go(home, "failed");
-
-  const outcome = await exchangeTelegramCode(
-    code,
-    `${origin}${TG_CALLBACK_PATH}`,
-    session.codeVerifier,
-  );
-  if (!outcome.ok) return go(home, outcome.reason === "rejected" ? "failed" : "unavailable");
+  const outcome = await verifyWidgetPayload(widgetPayloadFromSearchParams(params));
+  if (!outcome.ok) {
+    if (outcome.reason === "expired") return go(home, "expired");
+    return go(home, outcome.reason === "rejected" ? "failed" : "unavailable");
+  }
   const tg = outcome.user;
 
   try {
     await connectDB();
 
-    if (session.intent === "login") {
+    if (intent === "login") {
       const user = await User.findOne({ telegramId: tg.id }).select("_id").lean();
       if (!user) return go("/login", "not_linked");
       await createSession(String(user._id));
