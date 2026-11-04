@@ -318,7 +318,7 @@
   .qo-grid-4 { grid-template-columns: repeat(2, 1fr); }
   .qo-stat { padding: 16px 18px; }
   .qo-stat-value { font-size: 28px; }
-  .qo-access { flex-wrap: wrap; padding: 20px; }
+  .qo-access { flex-wrap: wrap; align-items: flex-start; padding: 20px; }
   .qo-access-text { flex-basis: calc(100% - 70px); }
   .qo-gen-card { padding: 24px 20px; }
   .qo-code-card { flex-direction: column; align-items: stretch; gap: 16px; padding: 20px; }
