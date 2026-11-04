@@ -1,31 +1,25 @@
 import "server-only";
-import { createHash, randomBytes } from "node:crypto";
 import { SportyApiError, verifyTelegramLogin } from "@/lib/sporty/client";
-import type { TelegramUser } from "@/lib/sporty/schemas";
+import { telegramAuthPayloadSchema, type TelegramUser } from "@/lib/sporty/schemas";
 
 /**
- * Telegram OpenID Connect (authorization code + PKCE).
- *   1. /api/auth/telegram/start redirects the browser to Telegram with state + code_challenge.
- *   2. Telegram redirects back to /api/auth/telegram/callback?code=…&state=…
- *   3. We exchange the code at oauth.telegram.org/token (Client ID + Secret) for an id_token,
- *      then send { id_token } to the external API, which verifies it and returns the user.
- * Register the redirect URI under @BotFather → your bot → Login Widget → Allowed URLs.
+ * Classic Telegram Login Widget redirect flow (no Client Secret required).
+ *   1. /api/auth/telegram/start redirects to oauth.telegram.org with bot_id + return_to.
+ *   2. Telegram returns to /auth/telegram/return#tgAuthResult=… (hash is client-only).
+ *   3. The return page rewrites the hash into query params and hits /api/auth/telegram/callback.
+ *   4. We forward the widget payload to the external API, which checks the hash with the bot token.
+ * Register the site domain under @BotFather → /setdomain (and Allowed URLs for the return path).
  */
 
 export const TG_AUTHORIZE_URL = "https://oauth.telegram.org/auth";
-export const TG_TOKEN_URL = "https://oauth.telegram.org/token";
+export const TG_RETURN_PATH = "/auth/telegram/return";
 export const TG_CALLBACK_PATH = "/api/auth/telegram/callback";
 export const TG_STATE_COOKIE = "qo_tg_state";
 export const TG_STATE_MAX_AGE = 10 * 60;
 
-export type TelegramIntent = "login" | "link";
+const MAX_AUTH_AGE_SECONDS = 24 * 60 * 60;
 
-/** Cookie value: "{intent}:{state}:{code_verifier}" */
-export type TgAuthSession = {
-  intent: TelegramIntent;
-  state: string;
-  codeVerifier: string;
-};
+export type TelegramIntent = "login" | "link";
 
 /** Public origin of this app (APP_URL in production; falls back to the request's origin). */
 export function appOrigin(req: Request): string {
@@ -33,131 +27,57 @@ export function appOrigin(req: Request): string {
   return configured || new URL(req.url).origin;
 }
 
-export function telegramClientId(): string | undefined {
+/** Bot id from BotFather (same value used as OIDC Client ID). */
+export function telegramBotId(): string | undefined {
   return process.env.TELEGRAM_CLIENT_ID?.trim() || undefined;
 }
 
-export function telegramClientSecret(): string | undefined {
-  return process.env.TELEGRAM_CLIENT_SECRET?.trim() || undefined;
-}
-
-/** PKCE S256 verifier + challenge for the authorize redirect. */
-export function createPkce(): { verifier: string; challenge: string } {
-  const verifier = randomBytes(32).toString("base64url");
-  const challenge = createHash("sha256").update(verifier).digest("base64url");
-  return { verifier, challenge };
-}
-
-export function encodeTgAuthSession(session: TgAuthSession): string {
-  return `${session.intent}:${session.state}:${session.codeVerifier}`;
-}
-
-export function decodeTgAuthSession(raw: string): TgAuthSession | null {
-  const first = raw.indexOf(":");
-  if (first <= 0) return null;
-  const second = raw.indexOf(":", first + 1);
-  if (second <= first + 1) return null;
-  const intent = raw.slice(0, first) as TelegramIntent;
-  if (intent !== "login" && intent !== "link") return null;
-  const state = raw.slice(first + 1, second);
-  const codeVerifier = raw.slice(second + 1);
-  if (!state || !codeVerifier) return null;
-  return { intent, state, codeVerifier };
+export function parseTelegramIntent(raw: string | null | undefined): TelegramIntent | null {
+  return raw === "login" || raw === "link" ? raw : null;
 }
 
 export type VerifyOutcome =
   | { ok: true; user: TelegramUser }
-  | { ok: false; reason: "rejected" | "unavailable" };
+  | { ok: false; reason: "rejected" | "unavailable" | "expired" };
 
 /**
- * Exchange an authorization code for an id_token at Telegram, then verify it via the external API.
+ * Validates a Telegram Login Widget payload. The hash check is done by the external API; we add
+ * a freshness check and only ever trust the identity it returns, never the ID the browser sent.
  */
-export async function exchangeTelegramCode(
-  code: string,
-  redirectUri: string,
-  codeVerifier: string,
-): Promise<VerifyOutcome> {
-  const clientId = telegramClientId();
-  const clientSecret = telegramClientSecret();
-  if (!clientId || !clientSecret) {
-    return { ok: false, reason: "unavailable" };
-  }
+export async function verifyWidgetPayload(body: unknown): Promise<VerifyOutcome> {
+  const parsed = telegramAuthPayloadSchema.safeParse(body);
+  if (!parsed.success) return { ok: false, reason: "rejected" };
 
-  let idToken: string;
-  try {
-    idToken = await fetchTelegramIdToken({
-      code,
-      redirectUri,
-      codeVerifier,
-      clientId,
-      clientSecret,
-    });
-  } catch (err) {
-    console.error("[telegram] token exchange failed", err instanceof Error ? err.message : err);
-    return { ok: false, reason: "rejected" };
+  const ageSeconds = Math.floor(Date.now() / 1000) - parsed.data.auth_date;
+  if (ageSeconds > MAX_AUTH_AGE_SECONDS || ageSeconds < -60) {
+    return { ok: false, reason: "expired" };
   }
 
   try {
-    const { user } = await verifyTelegramLogin({ id_token: idToken });
+    // Forward the original keys: Telegram's hash covers every field it sent.
+    const { user } = await verifyTelegramLogin(parsed.data);
     return { ok: true, user };
   } catch (err) {
     if (err instanceof SportyApiError) {
       const rejected = err.status === 400 || err.status === 401 || err.status === 403;
-      if (!rejected) console.error("[telegram] id_token verify failed", err.message);
+      if (!rejected) console.error("[telegram] widget verify failed", err.message);
       return { ok: false, reason: rejected ? "rejected" : "unavailable" };
     }
     throw err;
   }
 }
 
-async function fetchTelegramIdToken({
-  code,
-  redirectUri,
-  codeVerifier,
-  clientId,
-  clientSecret,
-}: {
-  code: string;
-  redirectUri: string;
-  codeVerifier: string;
-  clientId: string;
-  clientSecret: string;
-}): Promise<string> {
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-  const res = await fetch(TG_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      authorization: `Basic ${credentials}`,
-    },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: redirectUri,
-      client_id: clientId,
-      code_verifier: codeVerifier,
-    }),
-    signal: AbortSignal.timeout(15_000),
-  });
-
-  const json: unknown = await res.json().catch(() => null);
-  if (!res.ok) {
-    const detail =
-      json && typeof json === "object" && "error" in json && typeof json.error === "string"
-        ? json.error
-        : `HTTP ${res.status}`;
-    throw new Error(detail);
+/** Build a plain object from callback query params for schema parsing. */
+export function widgetPayloadFromSearchParams(params: URLSearchParams): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const [key, value] of params.entries()) {
+    if (key === "tg" || key === "intent") continue;
+    if (key === "id" || key === "auth_date") {
+      const n = Number(value);
+      payload[key] = Number.isFinite(n) ? n : value;
+    } else {
+      payload[key] = value;
+    }
   }
-
-  if (
-    !json ||
-    typeof json !== "object" ||
-    !("id_token" in json) ||
-    typeof json.id_token !== "string" ||
-    !json.id_token
-  ) {
-    throw new Error("Token response missing id_token");
-  }
-
-  return json.id_token;
+  return payload;
 }

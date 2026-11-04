@@ -85,7 +85,7 @@ async function request<S extends z.ZodType>(
 
 /* ---------- Telegram & subscription ---------- */
 
-/** Asks the external API to verify a Telegram login payload (widget hash, id_token, or initData). */
+/** Asks the external API to verify a Telegram Login Widget payload (it checks the hash). */
 export async function verifyTelegramLogin(
   payload: Record<string, unknown>,
 ): Promise<{ user: TelegramUser; subscription?: Subscription }> {
