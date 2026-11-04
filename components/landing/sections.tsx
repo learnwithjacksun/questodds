@@ -32,7 +32,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I need Telegram?",
-    a: "No. You can use the web dashboard or our Telegram bot. Pick whichever you prefer; neither is required.",
+    a: "Not to create an account, and you can use the Telegram bot on its own. To generate codes on the web, link your Telegram account in Settings: subscriptions are tied to it, so one plan works on both the website and the bot.",
   },
   {
     q: "Are the codes guaranteed to win?",

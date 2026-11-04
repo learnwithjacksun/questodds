@@ -6,8 +6,13 @@ const userSchema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     emailVerifiedAt: { type: Date },
-    // Self-declared at sign-up and checked server-side (18+). Not document verification.
-    dateOfBirth: { type: Date, required: true },
+    // Self-declared "I am 18 or older" confirmation at sign-up. Not document verification.
+    ageConfirmedAt: { type: Date, required: true },
+    // Linked via the Telegram Login Widget (verified server-side). One Telegram ID per account.
+    telegramId: { type: String, unique: true, sparse: true },
+    telegramUsername: { type: String },
+    telegramPhotoUrl: { type: String },
+    telegramLinkedAt: { type: Date },
   },
   { timestamps: true },
 );

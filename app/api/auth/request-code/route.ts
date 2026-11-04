@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { cooldownRemaining, issueCode } from "@/lib/auth/otp";
-import { dobSchema, requestCodeSchema } from "@/lib/validators/auth";
+import { MIN_AGE, requestCodeSchema } from "@/lib/validators/auth";
 
 export async function POST(req: Request) {
   const parsed = requestCodeSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
-  const { mode, email, username, dateOfBirth } = parsed.data;
+  const { mode, email, username, ageConfirmed } = parsed.data;
 
   try {
     await connectDB();
@@ -22,10 +22,9 @@ export async function POST(req: Request) {
       if (!username) {
         return NextResponse.json({ error: "Username is required", field: "username" }, { status: 400 });
       }
-      const dob = dobSchema.safeParse(dateOfBirth);
-      if (!dob.success) {
+      if (ageConfirmed !== true) {
         return NextResponse.json(
-          { error: dob.error.issues[0]?.message ?? "Enter a valid date of birth", field: "dateOfBirth" },
+          { error: `You must confirm you are ${MIN_AGE} or older`, field: "ageConfirmed" },
           { status: 400 },
         );
       }
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     // Registering with an email that already exists simply sends a sign-in code.
-    await issueCode(email, existing || !username || !dateOfBirth ? undefined : { username, dateOfBirth });
+    await issueCode(email, existing || !username || !ageConfirmed ? undefined : { username, ageConfirmed });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[auth] request-code failed", err);

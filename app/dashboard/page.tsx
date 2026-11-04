@@ -1,33 +1,58 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { connectDB } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
-import { User } from "@/lib/models/user";
-import { LogoutButton } from "@/components/auth/logout-button";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
+import { AccessCard } from "@/components/dashboard/access-card";
+import { ProofFeed, UserStatsTiles } from "@/components/dashboard/stats";
+import { PageHead, Skeleton } from "@/components/dashboard/ui";
+import { requireUser } from "@/lib/auth/current-user";
+import { getAccess } from "@/lib/access";
+import { SPORTS } from "@/lib/sporty/schemas";
+import { SPORT_META } from "@/lib/sporty/sports";
 
-async function DashboardContent() {
-  const session = await getSession();
-  if (!session) redirect("/login");
+export const metadata: Metadata = { title: "Dashboard – Quest Codes" };
 
-  await connectDB();
-  const user = await User.findById(session.userId).select("username email").lean();
-  if (!user) redirect("/login");
+export default async function OverviewPage() {
+  const user = await requireUser();
+  const access = await getAccess(user);
 
   return (
-    <div className="qo-section">
-      <h1 className="qo-h2">Hi, {user.username}</h1>
-      <p style={{ color: "var(--muted)", marginBottom: 24 }}>
-        Signed in as {user.email}. The dashboard is coming in the next phase.
-      </p>
-      <LogoutButton />
-    </div>
-  );
-}
+    <>
+      <PageHead title="Hi," accent={user.username}>
+        Generate booking codes, track how they do, and manage your subscription.
+      </PageHead>
 
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardContent />
-    </Suspense>
+      <AccessCard access={access} />
+
+      <section className="qo-dash-section">
+        <h2>Generate</h2>
+        <div className="qo-dash-grid qo-grid-3">
+          {SPORTS.map((s) => (
+            <Link key={s} href={`/dashboard/generate?sport=${s}`} className="qo-card qo-link-card">
+              <span className="qo-icon-badge" aria-hidden="true">
+                <HugeiconsIcon icon={SPORT_META[s].icon} size={22} />
+              </span>
+              <h3>{SPORT_META[s].name}</h3>
+              <p>{SPORT_META[s].blurb}</p>
+              <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} className="qo-link-card-arrow" aria-hidden="true" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {user.telegram && (
+        <section className="qo-dash-section">
+          <h2>Your stats</h2>
+          <Suspense fallback={<Skeleton height={110} />}>
+            <UserStatsTiles telegramId={user.telegram.id} />
+          </Suspense>
+        </section>
+      )}
+
+      <Suspense fallback={<Skeleton height={260} />}>
+        <ProofFeed />
+      </Suspense>
+    </>
   );
 }

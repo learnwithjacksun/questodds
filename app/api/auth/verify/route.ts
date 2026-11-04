@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { verifyCode } from "@/lib/auth/otp";
 import { createSession } from "@/lib/auth/session";
-import { dobSchema, verifyCodeSchema } from "@/lib/validators/auth";
+import { verifyCodeSchema } from "@/lib/validators/auth";
 
 export async function POST(req: Request) {
   const parsed = verifyCodeSchema.safeParse(await req.json().catch(() => null));
@@ -30,15 +30,15 @@ export async function POST(req: Request) {
 
     let user = await User.findOne({ email });
     if (!user) {
-      // A new account can only come from a registration code that carried a valid, adult DOB.
-      if (!result.username || !result.dateOfBirth || !dobSchema.safeParse(result.dateOfBirth).success) {
+      // A new account can only come from a registration code that carried the 18+ confirmation.
+      if (!result.username || result.ageConfirmed !== true) {
         return NextResponse.json({ error: "Invalid or expired code" }, { status: 400 });
       }
       try {
         user = await User.create({
           email,
           username: result.username,
-          dateOfBirth: new Date(`${result.dateOfBirth}T00:00:00.000Z`),
+          ageConfirmedAt: new Date(),
           emailVerifiedAt: new Date(),
         });
       } catch (err) {

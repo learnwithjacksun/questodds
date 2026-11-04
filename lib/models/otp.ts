@@ -7,7 +7,7 @@ const otpSchema = new Schema({
   attempts: { type: Number, default: 0 },
   // Username chosen at registration; the user is created only once the code is verified.
   username: { type: String },
-  dateOfBirth: { type: String }, // YYYY-MM-DD, already age-checked
+  ageConfirmed: { type: Boolean },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true, index: { expireAfterSeconds: 0 } },
 });

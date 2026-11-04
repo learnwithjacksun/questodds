@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 import "./landing.css";
 import "./auth.css";
+import "./dashboard.css";
 
 const geist = Geist({
   variable: "--font-geist-sans",

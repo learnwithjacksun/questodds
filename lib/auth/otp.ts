@@ -23,7 +23,7 @@ export async function cooldownRemaining(email: string): Promise<number> {
 
 export async function issueCode(
   email: string,
-  pending?: { username: string; dateOfBirth: string },
+  pending?: { username: string; ageConfirmed: boolean },
 ) {
   const code = String(randomInt(0, 10000)).padStart(4, "0");
   const now = Date.now();
@@ -35,7 +35,7 @@ export async function issueCode(
       codeHash: hash(email, code),
       attempts: 0,
       username: pending?.username,
-      dateOfBirth: pending?.dateOfBirth,
+      ageConfirmed: pending?.ageConfirmed,
       createdAt: new Date(now),
       expiresAt: new Date(now + OTP_TTL_MS),
     },
@@ -60,7 +60,7 @@ export async function issueCode(
 }
 
 export type VerifyResult =
-  | { ok: true; username?: string; dateOfBirth?: string }
+  | { ok: true; username?: string; ageConfirmed?: boolean }
   | { ok: false; reason: "invalid" | "locked" };
 
 export async function verifyCode(email: string, code: string): Promise<VerifyResult> {
@@ -81,5 +81,5 @@ export async function verifyCode(email: string, code: string): Promise<VerifyRes
   }
 
   await otp.deleteOne();
-  return { ok: true, username: otp.username ?? undefined, dateOfBirth: otp.dateOfBirth ?? undefined };
+  return { ok: true, username: otp.username ?? undefined, ageConfirmed: otp.ageConfirmed ?? undefined };
 }
