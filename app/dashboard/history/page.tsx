@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { TelegramIcon } from "@hugeicons/core-free-icons";
+import { TelegramLogo } from "@/components/telegram/logo";
 import { HistorySection } from "@/components/dashboard/stats";
 import { Locked, PageHead, Skeleton } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
@@ -22,7 +22,7 @@ export default async function HistoryPage() {
         </Suspense>
       ) : (
         <Locked
-          icon={TelegramIcon}
+          icon={<TelegramLogo size={24} />}
           title="Link Telegram to see your history"
           body="Slips are tracked against your Telegram account, so link it to see your stats here."
           href="/dashboard/settings"

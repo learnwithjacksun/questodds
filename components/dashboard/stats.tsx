@@ -132,33 +132,28 @@ export async function ProofFeed() {
         <div className="qo-dash-grid qo-grid-4">
           <StatTile label="Slips tracked" value={global.totalSlips} />
           <StatTile label="Settled" value={settledCount(global)} />
-          <StatTile
-            label="Win rate"
-            value={hasReliableRate(global) ? rate(global) : "—"}
-            hint={hasReliableRate(global) ? "Of settled slips" : "Shown once enough slips settle"}
-          />
+          <StatTile label="Win rate" value={hasReliableRate(global) ? rate(global) : "—"} />
           <StatTile label="Pending" value={global.pending} />
         </div>
       )}
 
-      <div className="qo-card qo-card-flush qo-feed">
-        <h3>Latest slips</h3>
-        <SlipsTable
-          empty="No slips tracked yet."
-          rows={latest.slice(0, 8).map((s) => ({
-            code: s.code,
-            sport: s.sport,
-            odds: s.odds,
-            legs: s.legs,
-            status: s.status,
-            at: s.createdAt,
-          }))}
-        />
-      </div>
-      <p className="qo-fine">
-        Figures come from Quest Codes&apos; own tracker and are not independently audited. Past results
-        don&apos;t guarantee future results.
-      </p>
+      {latest.length > 0 && (
+        <div className="qo-card qo-card-flush qo-feed">
+          <h3>Latest slips</h3>
+          <SlipsTable
+            empty=""
+            rows={latest.slice(0, 8).map((s) => ({
+              code: s.code,
+              sport: s.sport,
+              odds: s.odds,
+              legs: s.legs,
+              status: s.status,
+              at: s.createdAt,
+            }))}
+          />
+        </div>
+      )}
+      <p className="qo-fine">Unaudited figures from our own tracker. Past results don&apos;t guarantee future ones.</p>
     </section>
   );
 }

@@ -2,8 +2,9 @@ import "server-only";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
-export const SESSION_COOKIE = "qo_session";
-const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+import { SESSION_COOKIE, SESSION_MAX_AGE as MAX_AGE } from "@/lib/auth/constants";
+
+export { SESSION_COOKIE };
 
 function key() {
   const secret = process.env.AUTH_SECRET;

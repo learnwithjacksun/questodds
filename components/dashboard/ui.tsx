@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { formatOdds, formatWhen } from "@/lib/format";
 import { sportName } from "@/lib/sporty/sports";
@@ -33,7 +33,7 @@ export function Locked({
   href,
   cta,
 }: {
-  icon: IconSvgElement;
+  icon: React.ReactNode;
   title: string;
   body: string;
   href: string;
@@ -42,7 +42,7 @@ export function Locked({
   return (
     <div className="qo-card qo-locked">
       <span className="qo-icon-badge" aria-hidden="true">
-        <HugeiconsIcon icon={icon} size={22} />
+        {icon}
       </span>
       <h3>{title}</h3>
       <p>{body}</p>

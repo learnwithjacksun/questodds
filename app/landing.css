@@ -269,6 +269,7 @@
   display: grid;
   place-items: center;
 }
+.qo-tg-mark { flex: none; display: block; }
 .qo-book-text { display: flex; flex-direction: column; text-align: left; gap: 2px; }
 .qo-book-primary { font-size: 14px; font-weight: 600; color: #000; }
 .qo-book-secondary {

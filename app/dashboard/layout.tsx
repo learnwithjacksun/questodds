@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { DashNav, DashNavSkeleton } from "@/components/dashboard/nav";
-import { Skeleton } from "@/components/dashboard/ui";
+import { PageLoader } from "@/components/page-loader";
 import { requireUser } from "@/lib/auth/current-user";
 
 async function Header() {
@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Suspense>
 
       <main className="qo-dash-main">
-        <Suspense fallback={<Skeleton height={240} />}>{children}</Suspense>
+        <Suspense fallback={<PageLoader />}>{children}</Suspense>
       </main>
 
       <footer className="qo-dash-footer">

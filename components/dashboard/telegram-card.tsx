@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { TelegramIcon } from "@hugeicons/core-free-icons";
+import { TelegramLogo } from "@/components/telegram/logo";
 import { TelegramButton } from "@/components/telegram/telegram-button";
 import { deleteJson } from "@/lib/http";
 
@@ -27,7 +26,7 @@ export function TelegramCard({ linked }: { linked: { username: string | null } |
     <div className="qo-card">
       <div className="qo-card-top">
         <span className="qo-icon-badge" aria-hidden="true">
-          <HugeiconsIcon icon={TelegramIcon} size={22} />
+          <TelegramLogo size={26} />
         </span>
       </div>
       <h3>Telegram</h3>

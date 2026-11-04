@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { Alert02Icon, Crown02Icon, TelegramIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Alert02Icon, Crown02Icon } from "@hugeicons/core-free-icons";
+import { TelegramLogo } from "@/components/telegram/logo";
 import { Generator } from "@/components/dashboard/generator";
 import { Locked, PageHead } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
@@ -25,7 +27,7 @@ export default async function GeneratePage({
 
       {!access.linked ? (
         <Locked
-          icon={TelegramIcon}
+          icon={<TelegramLogo size={24} />}
           title="Link your Telegram first"
           body="Your subscription lives on your Telegram account. Link it in Settings to unlock code generation."
           href="/dashboard/settings"
@@ -33,7 +35,7 @@ export default async function GeneratePage({
         />
       ) : access.unavailable ? (
         <Locked
-          icon={Alert02Icon}
+          icon={<HugeiconsIcon icon={Alert02Icon} size={22} />}
           title="Couldn't check your subscription"
           body="The service may be waking up. Give it a minute, then refresh this page."
           href="/dashboard/generate"
@@ -41,7 +43,7 @@ export default async function GeneratePage({
         />
       ) : !access.allowed ? (
         <Locked
-          icon={Crown02Icon}
+          icon={<HugeiconsIcon icon={Crown02Icon} size={22} />}
           title="A VIP subscription is required"
           body="Upgrade to generate codes. If you already subscribed in the Telegram bot, it unlocks here automatically."
           href="/dashboard/upgrade"

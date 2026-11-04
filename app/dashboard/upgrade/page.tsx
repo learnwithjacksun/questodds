@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TelegramIcon } from "@hugeicons/core-free-icons";
+import { TelegramLogo } from "@/components/telegram/logo";
 import { AccessCard } from "@/components/dashboard/access-card";
 import { Upgrade } from "@/components/dashboard/upgrade";
 import { Locked, PageHead } from "@/components/dashboard/ui";
@@ -20,7 +20,7 @@ export default async function UpgradePage() {
 
       {!access.linked ? (
         <Locked
-          icon={TelegramIcon}
+          icon={<TelegramLogo size={24} />}
           title="Link your Telegram first"
           body="Payments are credited to your Telegram account so both platforms unlock together."
           href="/dashboard/settings"

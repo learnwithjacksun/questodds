@@ -108,7 +108,8 @@
 .qo-grid-4 { grid-template-columns: repeat(4, 1fr); }
 .qo-dash .qo-card { background: rgba(255, 255, 255, 0.9); }
 .qo-card-flush { padding: 8px 0 0; overflow: hidden; }
-.qo-card-flush h3 { padding: 14px 24px 0; }
+.qo-card-flush h3 { padding: 18px 24px 4px; }
+.qo-dash-grid + .qo-feed { margin-top: 14px; }
 .qo-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
 .qo-fine { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 .qo-empty { margin: 0; padding: 28px 24px; color: var(--muted); font-size: 15px; }
@@ -254,6 +255,37 @@
 .qo-checkout .qo-checkout-actions .qo-btn-ghost { height: 44px; padding: 0 18px; font-size: 14px; }
 .qo-checkout .qo-kv > .qo-btn-ghost { flex: none; }
 
+/* ---------- Page loader ---------- */
+@keyframes qo-load-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
+@keyframes qo-load-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.qo-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 46svh;
+}
+.qo-loader.is-fullscreen { position: fixed; inset: 0; z-index: 200; min-height: 0; background: var(--bg); }
+.qo-loader-logo {
+  font-family: var(--font-source-serif), serif;
+  font-size: 34px;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: -0.08em;
+  animation: qo-load-fade 1.6s ease-in-out infinite;
+}
+.qo-loader-bar { position: relative; width: 120px; height: 3px; overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.08); }
+.qo-loader-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--text);
+  animation: qo-load-slide 1.1s ease-in-out infinite;
+}
+
 /* ---------- Skeleton ---------- */
 .qo-skel {
   width: 100%;
@@ -298,5 +330,5 @@
   .qo-dash-footer { padding: 24px 16px 32px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .qo-spin, .qo-skel { animation: none; }
+  .qo-spin, .qo-skel, .qo-loader-logo, .qo-loader-bar::after { animation: none; }
 }

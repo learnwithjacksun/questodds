@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { TelegramIcon } from "@hugeicons/core-free-icons";
+import { TelegramLogo } from "@/components/telegram/logo";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 
 const LINE_COUNT = 20;
@@ -91,9 +90,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="qo-btn-book w-fit"
           >
-            <span className="qo-avatar">
-              <HugeiconsIcon icon={TelegramIcon} size={20} />
-            </span>
+            <TelegramLogo size={40} className="qo-tg-mark" />
             <span className="qo-book-text">
               <span className="qo-book-primary">Use Telegram instead</span>
               <span className="qo-book-secondary">
