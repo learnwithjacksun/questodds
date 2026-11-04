@@ -6,22 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { TelegramIcon } from "@hugeicons/core-free-icons";
-import { TelegramLoginButton } from "@/components/telegram/login-button";
-import { deleteJson, postJson } from "@/lib/http";
-import type { TelegramAuthPayload } from "@/lib/sporty/schemas";
+import { TelegramButton } from "@/components/telegram/telegram-button";
+import { deleteJson } from "@/lib/http";
 
 export function TelegramCard({ linked }: { linked: { username: string | null } | null }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
-
-  const link = useMutation({
-    mutationFn: (payload: TelegramAuthPayload) => postJson("/api/telegram/link", payload),
-    onSuccess: () => {
-      toast.success("Telegram linked.");
-      router.refresh();
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
 
   const unlink = useMutation({
     mutationFn: () => deleteJson("/api/telegram/link"),
@@ -69,7 +59,9 @@ export function TelegramCard({ linked }: { linked: { username: string | null } |
               </button>
             )}
           </div>
-          {confirming && <p className="qo-fine">You won&apos;t be able to generate codes here until you link again.</p>}
+          {confirming && (
+            <p className="qo-fine">You won&apos;t be able to generate codes here until you link again.</p>
+          )}
         </>
       ) : (
         <>
@@ -77,8 +69,10 @@ export function TelegramCard({ linked }: { linked: { username: string | null } |
             Link your Telegram account to use your subscription here. If you already subscribed in the
             bot, it unlocks the website automatically.
           </p>
-          <div className="qo-card-actions" aria-busy={link.isPending}>
-            <TelegramLoginButton onAuth={(user) => link.mutate(user)} />
+          <div className="qo-card-actions">
+            <TelegramButton intent="link" className="qo-btn-primary qo-btn-sm">
+              Link Telegram
+            </TelegramButton>
           </div>
         </>
       )}

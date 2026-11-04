@@ -255,10 +255,9 @@
   animation: qo-shimmer 1.6s linear infinite;
 }
 
-/* ---------- Telegram widget & divider (login) ---------- */
-.qo-tg-widget { min-height: 40px; display: flex; align-items: center; }
+/* ---------- Telegram button & divider (login) ---------- */
 .qo-tg-login { margin-top: 18px; }
-.qo-tg-login .qo-tg-widget { justify-content: center; }
+.qo-tg-btn { width: 100%; height: 52px; }
 .qo-tg-login .qo-hint { margin: 10px 0 0; text-align: center; }
 .qo-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; font-size: 13px; color: var(--muted); }
 .qo-divider::before, .qo-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-soft); }

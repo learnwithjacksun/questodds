@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { TelegramFlash } from "@/components/telegram/flash";
 import { TelegramCard } from "@/components/dashboard/telegram-card";
 import { PageHead } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
@@ -11,6 +13,9 @@ export default async function SettingsPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <TelegramFlash />
+      </Suspense>
       <PageHead title="Account" accent="settings">
         Your profile and connected accounts.
       </PageHead>

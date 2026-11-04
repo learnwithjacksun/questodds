@@ -1,38 +1,43 @@
 import "server-only";
 import { SportyApiError, verifyTelegramLogin } from "@/lib/sporty/client";
-import { telegramAuthPayloadSchema, type TelegramUser } from "@/lib/sporty/schemas";
+import type { TelegramUser } from "@/lib/sporty/schemas";
 
-const MAX_AUTH_AGE_SECONDS = 24 * 60 * 60;
+/**
+ * Telegram OpenID Connect (authorization code flow).
+ *   1. /api/auth/telegram/start redirects the browser to Telegram with a one-time `state`.
+ *   2. Telegram redirects back to /api/auth/telegram/callback?code=…&state=…
+ *   3. We send { code, redirect_uri } to the external API, which exchanges it using the bot's
+ *      Client ID + Secret and returns the verified Telegram user. The secret never lives here.
+ * Register the redirect URI under @BotFather → your bot → Login Widget → Allowed URLs.
+ */
+
+export const TG_AUTHORIZE_URL = "https://oauth.telegram.org/auth";
+export const TG_CALLBACK_PATH = "/api/auth/telegram/callback";
+export const TG_STATE_COOKIE = "qo_tg_state";
+export const TG_STATE_MAX_AGE = 10 * 60;
+
+export type TelegramIntent = "login" | "link";
+
+/** Public origin of this app (APP_URL in production; falls back to the request's origin). */
+export function appOrigin(req: Request): string {
+  const configured = process.env.APP_URL?.trim().replace(/\/$/, "");
+  return configured || new URL(req.url).origin;
+}
 
 export type VerifyOutcome =
   | { ok: true; user: TelegramUser }
-  | { ok: false; error: string; status: number };
+  | { ok: false; reason: "rejected" | "unavailable" };
 
-/**
- * Validates a Telegram Login Widget payload. The hash check is done by the external API; we add
- * a freshness check and only ever trust the identity it returns, never the ID the browser sent.
- */
-export async function verifyWidgetPayload(body: unknown): Promise<VerifyOutcome> {
-  const parsed = telegramAuthPayloadSchema.safeParse(body);
-  if (!parsed.success) return { ok: false, error: "Invalid Telegram data", status: 400 };
-
-  const ageSeconds = Math.floor(Date.now() / 1000) - parsed.data.auth_date;
-  if (ageSeconds > MAX_AUTH_AGE_SECONDS) {
-    return { ok: false, error: "Telegram login expired. Try again.", status: 400 };
-  }
-
+/** Exchange an authorization code (via the external API) for the verified Telegram identity. */
+export async function exchangeTelegramCode(code: string, redirectUri: string): Promise<VerifyOutcome> {
   try {
-    // Forward the original keys: Telegram's hash covers every field it sent.
-    const { user } = await verifyTelegramLogin(parsed.data);
+    const { user } = await verifyTelegramLogin({ code, redirect_uri: redirectUri });
     return { ok: true, user };
   } catch (err) {
     if (err instanceof SportyApiError) {
-      const rejected = err.status === 401 || err.status === 403 || err.status === 400;
-      return {
-        ok: false,
-        error: rejected ? "Telegram verification failed" : err.message,
-        status: rejected ? 401 : 502,
-      };
+      const rejected = err.status === 400 || err.status === 401 || err.status === 403;
+      if (!rejected) console.error("[telegram] code exchange failed", err.message);
+      return { ok: false, reason: rejected ? "rejected" : "unavailable" };
     }
     throw err;
   }
