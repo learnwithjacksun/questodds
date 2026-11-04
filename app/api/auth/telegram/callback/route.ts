@@ -7,10 +7,10 @@ import { createSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import {
   appOrigin,
+  decodeTgAuthSession,
   exchangeTelegramCode,
   TG_CALLBACK_PATH,
   TG_STATE_COOKIE,
-  type TelegramIntent,
 } from "@/lib/telegram";
 
 function sameState(a: string, b: string): boolean {
@@ -32,15 +32,12 @@ export async function GET(req: Request) {
   const saved = jar.get(TG_STATE_COOKIE)?.value ?? "";
   jar.delete({ name: TG_STATE_COOKIE, path: "/api/auth/telegram" });
 
-  const sep = saved.indexOf(":");
-  const intent = (sep > 0 ? saved.slice(0, sep) : "") as TelegramIntent;
-  const state = sep > 0 ? saved.slice(sep + 1) : "";
-
-  const home = intent === "link" ? "/dashboard/settings" : "/login";
+  const session = decodeTgAuthSession(saved);
+  const home = session?.intent === "link" ? "/dashboard/settings" : "/login";
   const go = (path: string, code: string) =>
     NextResponse.redirect(new URL(`${path}?tg=${code}`, origin));
 
-  if ((intent !== "login" && intent !== "link") || !state || !sameState(state, params.get("state") ?? "")) {
+  if (!session || !sameState(session.state, params.get("state") ?? "")) {
     return go("/login", "expired");
   }
   if (params.get("error")) return go(home, "denied");
@@ -48,14 +45,18 @@ export async function GET(req: Request) {
   const code = params.get("code");
   if (!code) return go(home, "failed");
 
-  const outcome = await exchangeTelegramCode(code, `${origin}${TG_CALLBACK_PATH}`);
+  const outcome = await exchangeTelegramCode(
+    code,
+    `${origin}${TG_CALLBACK_PATH}`,
+    session.codeVerifier,
+  );
   if (!outcome.ok) return go(home, outcome.reason === "rejected" ? "failed" : "unavailable");
   const tg = outcome.user;
 
   try {
     await connectDB();
 
-    if (intent === "login") {
+    if (session.intent === "login") {
       const user = await User.findOne({ telegramId: tg.id }).select("_id").lean();
       if (!user) return go("/login", "not_linked");
       await createSession(String(user._id));

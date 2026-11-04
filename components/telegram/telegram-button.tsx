@@ -1,5 +1,3 @@
-import { TelegramLogo } from "@/components/telegram/logo";
-
 /** Starts Telegram's OpenID Connect flow. A plain link: it's a full-page redirect to Telegram. */
 export function TelegramButton({
   intent,
@@ -12,7 +10,6 @@ export function TelegramButton({
 }) {
   return (
     <a href={`/api/auth/telegram/start?intent=${intent}`} className={className}>
-      <TelegramLogo size={20} />
       {children}
     </a>
   );
