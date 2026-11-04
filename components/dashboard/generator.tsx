@@ -8,7 +8,8 @@ import { ArrowUpRight01Icon, InformationCircleIcon, Loading03Icon } from "@hugei
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { postJson } from "@/lib/http";
 import { SPORTS, type GenerateRequest, type GenerateResult, type Sport } from "@/lib/sporty/schemas";
-import { SPORT_META } from "@/lib/sporty/sports";
+import { QUEST_SPECIAL, SPORT_META, type Service } from "@/lib/sporty/sports";
+import { QuestSpecial } from "@/components/dashboard/quest-special";
 
 type Results = Partial<Record<Sport, GenerateResult>>;
 
@@ -18,8 +19,17 @@ function progressMessage(seconds: number): string {
   return "Still working. The service may be waking up or waiting out SportyBet's rate limit.";
 }
 
-export function Generator({ initialSport }: { initialSport: Sport }) {
-  const [sport, setSport] = useState<Sport>(initialSport);
+export function Generator({ initialService }: { initialService: Service }) {
+  const [service, setService] = useState<Service>(initialService);
+  // Tabs for Quest Special keep the last sport selected so switching back feels stable.
+  const [lastSport, setLastSport] = useState<Sport>(
+    initialService === QUEST_SPECIAL.id ? "football" : initialService,
+  );
+  const sport = service === QUEST_SPECIAL.id ? lastSport : service;
+  const setSport = (s: Sport) => {
+    setLastSport(s);
+    setService(s);
+  };
   const [results, setResults] = useState<Results>({});
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
@@ -51,8 +61,8 @@ export function Generator({ initialSport }: { initialSport: Sport }) {
             key={s}
             type="button"
             role="tab"
-            aria-selected={s === sport}
-            className={`qo-tab${s === sport ? " is-active" : ""}`}
+            aria-selected={s === service}
+            className={`qo-tab${s === service ? " is-active" : ""}`}
             disabled={busy}
             onClick={() => setSport(s)}
           >
@@ -60,8 +70,23 @@ export function Generator({ initialSport }: { initialSport: Sport }) {
             {SPORT_META[s].name}
           </button>
         ))}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={service === QUEST_SPECIAL.id}
+          className={`qo-tab${service === QUEST_SPECIAL.id ? " is-active" : ""}`}
+          disabled={busy}
+          onClick={() => setService(QUEST_SPECIAL.id)}
+        >
+          <HugeiconsIcon icon={QUEST_SPECIAL.icon} size={18} aria-hidden="true" />
+          {QUEST_SPECIAL.name}
+        </button>
       </div>
 
+      {service === QUEST_SPECIAL.id ? (
+        <QuestSpecial />
+      ) : (
+        <>
       <div className="qo-card qo-gen-card">
         <div className="qo-card-top">
           <span className="qo-icon-badge" aria-hidden="true">
@@ -144,6 +169,8 @@ export function Generator({ initialSport }: { initialSport: Sport }) {
       )}
 
       <p className="qo-fine">{meta.note} Codes are suggestions, not guarantees. Bet responsibly.</p>
+        </>
+      )}
     </div>
   );
 }

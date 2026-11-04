@@ -4,7 +4,7 @@ import { Generator } from "@/components/dashboard/generator";
 import { Locked, PageHead } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
 import { getAccess } from "@/lib/access";
-import { isSport } from "@/lib/sporty/sports";
+import { isService } from "@/lib/sporty/sports";
 
 export const metadata: Metadata = { title: "Generate – Quest Codes" };
 
@@ -48,7 +48,7 @@ export default async function GeneratePage({
           cta="See upgrade options"
         />
       ) : (
-        <Generator initialSport={isSport(sport) ? sport : "football"} />
+        <Generator initialService={isService(sport) ? sport : "football"} />
       )}
     </>
   );

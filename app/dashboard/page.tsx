@@ -9,7 +9,7 @@ import { PageHead, Skeleton } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
 import { getAccess } from "@/lib/access";
 import { SPORTS } from "@/lib/sporty/schemas";
-import { SPORT_META } from "@/lib/sporty/sports";
+import { QUEST_SPECIAL, SPORT_META } from "@/lib/sporty/sports";
 
 export const metadata: Metadata = { title: "Dashboard – Quest Codes" };
 
@@ -39,6 +39,17 @@ export default async function OverviewPage() {
             </Link>
           ))}
         </div>
+        <Link
+          href={`/dashboard/generate?sport=${QUEST_SPECIAL.id}`}
+          className="qo-card qo-link-card qo-link-card-wide"
+        >
+          <span className="qo-icon-badge" aria-hidden="true">
+            <HugeiconsIcon icon={QUEST_SPECIAL.icon} size={22} />
+          </span>
+          <h3>{QUEST_SPECIAL.name}</h3>
+          <p>{QUEST_SPECIAL.blurb}</p>
+          <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} className="qo-link-card-arrow" aria-hidden="true" />
+        </Link>
       </section>
 
       {user.telegram && (

@@ -158,6 +158,13 @@
 .qo-link-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07); }
 .qo-link-card-arrow { position: absolute; top: 24px; right: 24px; color: var(--muted); }
 
+.qo-link-card-wide { margin-top: 14px; }
+.qo-link-card-wide p { max-width: 560px; }
+
+.qo-scan-row { display: flex; align-items: center; gap: 10px; margin-top: 22px; font-size: 15px; font-weight: 500; }
+.qo-scan-stop { margin-top: 16px; }
+.qo-code-missing { font-size: 22px; color: var(--muted); letter-spacing: -0.03em; }
+
 .qo-stat { display: flex; flex-direction: column; gap: 4px; padding: 20px 22px; }
 .qo-stat-label { font-size: 13px; font-weight: 500; color: var(--muted); }
 .qo-stat-value { font-size: 34px; font-weight: 600; letter-spacing: -0.05em; line-height: 1.1; }

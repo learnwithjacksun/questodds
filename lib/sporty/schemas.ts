@@ -99,6 +99,62 @@ export const generateRequestSchema = z.object({
 });
 export type GenerateRequest = z.infer<typeof generateRequestSchema>;
 
+/* ---------- Quest Special (live vFootball single-leg scanner) ---------- */
+const questSignalSchema = z.object({
+  /** null when a match qualified but SportyBet didn't mint a code. */
+  code: z.string().nullable(),
+  url: httpUrl.nullable(),
+  home: z.string(),
+  away: z.string(),
+  league: z.string().optional(),
+  minute: z.number(),
+  homeScore: z.number(),
+  awayScore: z.number(),
+  analysis: z.object({
+    window: z.string(),
+    type: z.string(),
+    description: z.string(),
+    odds: z.number(),
+    reasoning: z.string().optional(),
+  }),
+  timestamp: z.number(),
+});
+export type QuestSignal = z.infer<typeof questSignalSchema>;
+
+const questTimedOutSchema = z.object({ timedOut: z.literal(true), timestamp: z.number() });
+
+export const questSpecialStatusSchema = z.object({
+  success: z.boolean(),
+  active: z.boolean().optional(),
+  scans: z.number().optional(),
+  runningFor: z.number().optional(),
+  dailyUsed: z.number().optional(),
+  maxDaily: z.number().optional(),
+  lastResult: z.union([questSignalSchema, questTimedOutSchema]).nullish(),
+  error: z.string().optional(),
+});
+export type QuestSpecialStatus = z.infer<typeof questSpecialStatusSchema>;
+
+export const questSpecialStartSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+  dailyUsed: z.number().optional(),
+  maxDaily: z.number().optional(),
+});
+export type QuestSpecialStart = z.infer<typeof questSpecialStartSchema>;
+
+export const questSpecialStopSchema = z.object({
+  success: z.boolean(),
+  stopped: z.boolean().optional(),
+  message: z.string().optional(),
+});
+
+/** True when a status result is a found signal rather than a timeout. */
+export function isQuestSignal(result: QuestSpecialStatus["lastResult"]): result is QuestSignal {
+  return !!result && "home" in result;
+}
+
 /* ---------- Analytics ---------- */
 export const globalStatsSchema = z.object({
   success: z.boolean(),

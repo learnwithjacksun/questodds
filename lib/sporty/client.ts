@@ -6,6 +6,9 @@ import {
   globalStatsSchema,
   latestSlipsSchema,
   paymentStatusSchema,
+  questSpecialStartSchema,
+  questSpecialStatusSchema,
+  questSpecialStopSchema,
   subscriptionResponseSchema,
   telegramAuthResponseSchema,
   userStatsSchema,
@@ -14,6 +17,8 @@ import {
   type GlobalStats,
   type LatestSlip,
   type PaymentStatus,
+  type QuestSpecialStart,
+  type QuestSpecialStatus,
   type Sport,
   type Subscription,
   type TelegramUser,
@@ -109,6 +114,28 @@ export function generateCodes(sport: Sport, userId: string, fresh = false): Prom
     method: "POST",
     body: { sport, userId, fresh },
     timeoutMs: GENERATE_TIMEOUT_MS,
+  });
+}
+
+/* ---------- Quest Special ---------- */
+
+export async function startQuestSpecial(userId: string): Promise<QuestSpecialStart> {
+  const res = await request("/api/quest-special/start", questSpecialStartSchema, {
+    method: "POST",
+    body: { userId },
+  });
+  if (!res.success) throw new SportyApiError(res.error ?? "Couldn't start Quest Special.", 403);
+  return res;
+}
+
+export function getQuestSpecialStatus(userId: string): Promise<QuestSpecialStatus> {
+  return request(`/api/quest-special/status/${encodeURIComponent(userId)}`, questSpecialStatusSchema);
+}
+
+export function stopQuestSpecial(userId: string) {
+  return request("/api/quest-special/stop", questSpecialStopSchema, {
+    method: "POST",
+    body: { userId },
   });
 }
 
