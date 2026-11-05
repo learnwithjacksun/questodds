@@ -6,16 +6,20 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import { AccessCard } from "@/components/dashboard/access-card";
 import { ProofFeed, UserStatsTiles } from "@/components/dashboard/stats";
 import { PageHead, Skeleton } from "@/components/dashboard/ui";
-import { requireUser } from "@/lib/auth/current-user";
+import { requireUser, type CurrentUser } from "@/lib/auth/current-user";
 import { getAccess } from "@/lib/access";
 import { SPORTS } from "@/lib/sporty/schemas";
 import { QUEST_SPECIAL, SPORT_META } from "@/lib/sporty/sports";
 
 export const metadata: Metadata = { title: "Dashboard – Quest Codes" };
 
+/** Waits on the subscription lookup, so it streams in after the rest of the page. */
+async function AccessSection({ user }: { user: CurrentUser }) {
+  return <AccessCard access={await getAccess(user)} />;
+}
+
 export default async function OverviewPage() {
   const user = await requireUser();
-  const access = await getAccess(user);
 
   return (
     <>
@@ -23,7 +27,9 @@ export default async function OverviewPage() {
         Generate booking codes, track how they do, and manage your subscription.
       </PageHead>
 
-      <AccessCard access={access} />
+      <Suspense fallback={<Skeleton height={104} />}>
+        <AccessSection user={user} />
+      </Suspense>
 
       <section className="qo-dash-section">
         <h2>Generate</h2>
