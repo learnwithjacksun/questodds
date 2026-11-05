@@ -30,28 +30,40 @@
 }
 .qo-dash-main { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 112px 24px 48px; }
 
-/* Floating pill nav (always in its "scrolled" state) */
+/* Nav: a plain bar at the top of the page, a floating pill once scrolled (like the landing nav) */
 .qo-dnav {
   position: fixed;
-  top: 12px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  width: calc(100% - 24px);
-  /* Same width as the page content: 1040px main minus its 24px side padding */
-  max-width: 992px;
+  width: 100%;
+  /* Same width as the page content area: 1040px with 24px side padding */
+  max-width: 1040px;
   display: flex;
   align-items: center;
   gap: 16px;
+  padding: 16px 24px;
+  border-radius: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: top 0.35s ease, width 0.35s ease, max-width 0.35s ease, padding 0.35s ease,
+    border-radius 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease;
+}
+.qo-dnav.is-scrolled {
+  top: 12px;
+  width: calc(100% - 24px);
+  max-width: 992px;
   padding: 8px 10px 8px 22px;
   border-radius: 999px;
-  border: 1px solid var(--border-soft);
+  border-color: var(--border-soft);
   background: rgba(255, 255, 255, 0.82);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   backdrop-filter: blur(14px) saturate(1.4);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
-.qo-dnav .qo-logo { font-size: 24px; flex: none; }
+.qo-dnav .qo-logo { font-size: 28px; flex: none; transition: font-size 0.35s ease; }
+.qo-dnav.is-scrolled .qo-logo { font-size: 24px; }
 .qo-dnav-links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
 .qo-dnav-links a {
   display: inline-flex;
@@ -268,6 +280,9 @@
 }
 .qo-loader.is-fullscreen { position: fixed; inset: 0; z-index: 200; min-height: 0; background: var(--bg); }
 .qo-loader-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
   font-family: var(--font-source-serif), serif;
   font-size: 34px;
   font-weight: 600;
@@ -308,7 +323,8 @@
   .qo-dnav-name { display: none; }
 }
 @media (max-width: 809px) {
-  .qo-dnav { padding: 8px 10px 8px 18px; }
+  .qo-dnav { padding: 14px 16px; }
+  .qo-dnav.is-scrolled { padding: 8px 10px 8px 18px; }
   .qo-dnav-links, .qo-dnav-user { display: none; }
   .qo-dnav-menu { display: inline-flex; }
   .qo-dash-main { padding: 96px 16px 32px; }

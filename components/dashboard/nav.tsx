@@ -15,6 +15,7 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { LogoMark } from "@/components/brand/logo-mark";
 
 const LINKS = [
   { href: "/dashboard", label: "Overview", icon: Home01Icon, exact: true },
@@ -27,6 +28,14 @@ const LINKS = [
 export function DashNav({ username }: { username: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -43,8 +52,9 @@ export function DashNav({ username }: { username: string }) {
 
   return (
     <>
-      <header className="qo-dnav">
+      <header className={`qo-dnav${scrolled && !open ? " is-scrolled" : ""}`}>
         <Link href="/dashboard" className="qo-logo" aria-label="Quest Codes dashboard">
+          <LogoMark />
           Quest Codes
         </Link>
 
@@ -106,7 +116,10 @@ export function DashNav({ username }: { username: string }) {
 export function DashNavSkeleton() {
   return (
     <header className="qo-dnav">
-      <span className="qo-logo">Quest Codes</span>
+      <span className="qo-logo">
+        <LogoMark />
+        Quest Codes
+      </span>
     </header>
   );
 }

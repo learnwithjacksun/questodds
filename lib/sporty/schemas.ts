@@ -54,13 +54,6 @@ export const telegramUserSchema = z.object({
 });
 export type TelegramUser = z.infer<typeof telegramUserSchema>;
 
-export const telegramAuthResponseSchema = z.object({
-  success: z.boolean(),
-  error: z.string().optional(),
-  user: telegramUserSchema.optional(),
-  subscription: subscriptionSchema.optional(),
-});
-
 /* ---------- Code generation ---------- */
 export const sportyCodeSchema = z.object({
   code: z.string(),

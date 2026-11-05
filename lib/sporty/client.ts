@@ -10,7 +10,6 @@ import {
   questSpecialStatusSchema,
   questSpecialStopSchema,
   subscriptionResponseSchema,
-  telegramAuthResponseSchema,
   userStatsSchema,
   type Checkout,
   type GenerateResult,
@@ -21,7 +20,6 @@ import {
   type QuestSpecialStatus,
   type Sport,
   type Subscription,
-  type TelegramUser,
   type UserStats,
 } from "@/lib/sporty/schemas";
 
@@ -83,21 +81,8 @@ async function request<S extends z.ZodType>(
   return parsed.data;
 }
 
-/* ---------- Telegram & subscription ---------- */
-
-/** Asks the external API to verify Telegram login (widget hash, id_token, or initData). */
-export async function verifyTelegramLogin(
-  payload: Record<string, unknown>,
-): Promise<{ user: TelegramUser; subscription?: Subscription }> {
-  const res = await request("/api/auth/telegram", telegramAuthResponseSchema, {
-    method: "POST",
-    body: payload,
-  });
-  if (!res.success || !res.user) {
-    throw new SportyApiError(res.error ?? "Telegram verification failed.", 401);
-  }
-  return { user: res.user, subscription: res.subscription };
-}
+/* ---------- Subscription ---------- */
+// Telegram identity is verified locally in lib/telegram.ts, never through this API.
 
 export async function getSubscription(telegramId: string): Promise<Subscription> {
   const res = await request(

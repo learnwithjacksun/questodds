@@ -44,7 +44,12 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 .qo-nav.is-scrolled .qo-logo { font-size: 24px; }
+/* Logo mark sits before the wordmark and scales with its font size */
+.qo-logo-mark { display: block; flex: none; width: auto; height: 0.8em; }
 .qo-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
   font-family: var(--font-source-serif), serif;
   font-size: 30px;
   font-weight: 600;

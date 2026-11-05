@@ -1,3 +1,5 @@
+import { LogoMark } from "@/components/brand/logo-mark";
+
 /** Branded loader shown while a route streams in. Pure CSS, so it works as a Suspense fallback. */
 export function PageLoader({ fullscreen = false }: { fullscreen?: boolean }) {
   return (
@@ -6,7 +8,10 @@ export function PageLoader({ fullscreen = false }: { fullscreen?: boolean }) {
       role="status"
       aria-live="polite"
     >
-      <span className="qo-loader-logo">Quest Codes</span>
+      <span className="qo-loader-logo">
+        <LogoMark />
+        Quest Codes
+      </span>
       <span className="qo-loader-bar" aria-hidden="true" />
       <span className="qo-sr">Loading…</span>
     </div>

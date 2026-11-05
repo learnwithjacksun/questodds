@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUp01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { LogoMark } from "@/components/brand/logo-mark";
 
 const LINKS = [
   { href: "#services", label: "Services" },
@@ -38,6 +39,7 @@ export function Navbar() {
     <>
       <header className={`qo-nav${scrolled && !open ? " is-scrolled" : ""}`}>
         <Link href="/" className="qo-logo" aria-label="Quest Codes home">
+          <LogoMark />
           Quest Codes
         </Link>
         <button
