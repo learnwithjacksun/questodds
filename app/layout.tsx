@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./landing.css";
 import "./auth.css";
@@ -19,9 +20,23 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Quest Codes – SportyBet booking code automation",
-  description:
-    "Generate SportyBet booking codes from the web dashboard or Telegram. Independent third-party platform, not affiliated with SportyBet.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    url: "/",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: OG_IMAGE,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: OG_IMAGE,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
