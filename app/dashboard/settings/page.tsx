@@ -5,7 +5,6 @@ import { TelegramCard } from "@/components/dashboard/telegram-card";
 import { PageHead } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
 import { formatDay } from "@/lib/format";
-import { telegramClientId } from "@/lib/telegram";
 
 export const metadata: Metadata = { title: "Settings – Quest Codes" };
 
@@ -38,10 +37,7 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <TelegramCard
-          linked={user.telegram ? { username: user.telegram.username } : null}
-          clientId={telegramClientId()}
-        />
+        <TelegramCard linked={user.telegram ? { username: user.telegram.username } : null} />
       </div>
     </>
   );

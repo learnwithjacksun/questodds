@@ -8,13 +8,7 @@ import { TelegramLogo } from "@/components/telegram/logo";
 import { TelegramButton } from "@/components/telegram/telegram-button";
 import { deleteJson } from "@/lib/http";
 
-export function TelegramCard({
-  linked,
-  clientId,
-}: {
-  linked: { username: string | null } | null;
-  clientId?: string;
-}) {
+export function TelegramCard({ linked }: { linked: { username: string | null } | null }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
 
@@ -75,7 +69,7 @@ export function TelegramCard({
             bot, it unlocks the website automatically.
           </p>
           <div className="qo-card-actions">
-            <TelegramButton intent="link" clientId={clientId} className="qo-btn-primary qo-btn-sm">
+            <TelegramButton intent="link" className="qo-btn-primary qo-btn-sm">
               Link Telegram
             </TelegramButton>
           </div>
