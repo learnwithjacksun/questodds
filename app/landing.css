@@ -43,7 +43,7 @@
   border-color: var(--border-soft);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
-.qo-nav.is-scrolled .qo-logo { font-size: 24px; }
+.qo-nav.is-scrolled .qo-logo { font-size: 20px; }
 /* Logo mark sits before the wordmark and scales with its font size */
 .qo-logo-mark { display: block; flex: none; width: auto; height: 0.8em; }
 .qo-logo {
@@ -51,7 +51,7 @@
   align-items: center;
   gap: 0.3em;
   font-family: var(--font-source-serif), serif;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 600;
   font-style: italic;
   letter-spacing: -0.08em;

@@ -62,8 +62,8 @@
   backdrop-filter: blur(14px) saturate(1.4);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
-.qo-dnav .qo-logo { font-size: 28px; flex: none; transition: font-size 0.35s ease; }
-.qo-dnav.is-scrolled .qo-logo { font-size: 24px; }
+.qo-dnav .qo-logo { font-size: 24px; flex: none; transition: font-size 0.35s ease; }
+.qo-dnav.is-scrolled .qo-logo { font-size: 20px; }
 .qo-dnav-links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
 .qo-dnav-links a {
   display: inline-flex;
