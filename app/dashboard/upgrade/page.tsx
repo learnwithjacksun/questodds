@@ -15,7 +15,7 @@ export default async function UpgradePage() {
   return (
     <>
       <PageHead title="Upgrade to" accent="VIP">
-        One subscription covers the website and the Telegram bot.
+        One plan covers the website and the Telegram bot. Pay by bank transfer, no card needed.
       </PageHead>
 
       {!access.linked ? (
@@ -28,9 +28,9 @@ export default async function UpgradePage() {
         />
       ) : (
         <>
-          <AccessCard access={access} />
+          <AccessCard access={access} hideAction />
           <section className="qo-dash-section">
-            <Upgrade active={access.allowed} />
+            <Upgrade active={access.allowed} baselineExpiresAt={access.expiresAt} />
           </section>
         </>
       )}

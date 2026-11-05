@@ -3,8 +3,14 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpRight01Icon, InformationCircleIcon, Loading03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import {
+  ArrowUpRight01Icon,
+  CheckmarkCircle02Icon,
+  CircleIcon,
+  InformationCircleIcon,
+  Loading03Icon,
+} from "@hugeicons/core-free-icons";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { postJson } from "@/lib/http";
 import { SPORTS, type GenerateRequest, type GenerateResult, type Sport } from "@/lib/sporty/schemas";
@@ -12,6 +18,12 @@ import { QUEST_SPECIAL, SPORT_META, type Service } from "@/lib/sporty/sports";
 import { QuestSpecial } from "@/components/dashboard/quest-special";
 
 type Results = Partial<Record<Sport, GenerateResult>>;
+
+/** The four selectable services, in display order. */
+const OPTIONS: { id: Service; name: string; icon: IconSvgElement }[] = [
+  ...SPORTS.map((s) => ({ id: s as Service, name: SPORT_META[s].name, icon: SPORT_META[s].icon })),
+  { id: QUEST_SPECIAL.id, name: QUEST_SPECIAL.name, icon: QUEST_SPECIAL.icon },
+];
 
 function progressMessage(seconds: number): string {
   if (seconds < 10) return "Scanning fixtures…";
@@ -55,32 +67,30 @@ export function Generator({ initialService }: { initialService: Service }) {
 
   return (
     <div className="qo-gen">
-      <div className="qo-tabs" role="tablist" aria-label="Service">
-        {SPORTS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            role="tab"
-            aria-selected={s === service}
-            className={`qo-tab${s === service ? " is-active" : ""}`}
-            disabled={busy}
-            onClick={() => setSport(s)}
-          >
-            <HugeiconsIcon icon={SPORT_META[s].icon} size={18} aria-hidden="true" />
-            {SPORT_META[s].name}
-          </button>
-        ))}
-        <button
-          type="button"
-          role="tab"
-          aria-selected={service === QUEST_SPECIAL.id}
-          className={`qo-tab${service === QUEST_SPECIAL.id ? " is-active" : ""}`}
-          disabled={busy}
-          onClick={() => setService(QUEST_SPECIAL.id)}
-        >
-          <HugeiconsIcon icon={QUEST_SPECIAL.icon} size={18} aria-hidden="true" />
-          {QUEST_SPECIAL.name}
-        </button>
+      <div className="qo-tabs" role="radiogroup" aria-label="Service">
+        {OPTIONS.map((o) => {
+          const selected = o.id === service;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`qo-tab${selected ? " is-active" : ""}`}
+              disabled={busy}
+              onClick={() => (o.id === QUEST_SPECIAL.id ? setService(o.id) : setSport(o.id))}
+            >
+              <HugeiconsIcon icon={o.icon} size={20} aria-hidden="true" />
+              <span className="qo-tab-name">{o.name}</span>
+              <HugeiconsIcon
+                icon={selected ? CheckmarkCircle02Icon : CircleIcon}
+                size={20}
+                className="qo-tab-check"
+                aria-hidden="true"
+              />
+            </button>
+          );
+        })}
       </div>
 
       {service === QUEST_SPECIAL.id ? (

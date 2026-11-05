@@ -11,6 +11,8 @@ export type Access = {
   isAdmin: boolean;
   daysLeft: number | string;
   expDate: string | null;
+  /** Epoch ms when the subscription ends (null if none). Used to detect a renewal landing. */
+  expiresAt: number | null;
   /** The subscription service couldn't be reached, so status is unknown (not "expired"). */
   unavailable: boolean;
 };
@@ -21,6 +23,7 @@ const NOT_LINKED: Access = {
   isAdmin: false,
   daysLeft: 0,
   expDate: null,
+  expiresAt: null,
   unavailable: false,
 };
 
@@ -33,6 +36,7 @@ const lookup = cache(async (telegramId: string): Promise<Access> => {
       isAdmin: sub.isAdmin,
       daysLeft: sub.daysLeft,
       expDate: sub.expDate,
+      expiresAt: sub.expiresAt,
       unavailable: false,
     };
   } catch (err) {

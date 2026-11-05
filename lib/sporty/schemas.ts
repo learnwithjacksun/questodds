@@ -244,3 +244,12 @@ export const paymentStatusSchema = z.object({
   amount: z.number().optional(),
 });
 export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
+
+/** What our own /api/payment/[reference] returns: the checkout status plus the live subscription. */
+export type PaymentCheck = {
+  /** "paid" once the external API confirms it; anything else (e.g. "unpaid") means not yet. */
+  status: string;
+  message?: string;
+  /** null when the subscription lookup failed (don't treat that as "not subscribed"). */
+  subscription: Subscription | null;
+};

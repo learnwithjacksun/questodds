@@ -6,6 +6,7 @@ import { Generator } from "@/components/dashboard/generator";
 import { Locked, PageHead } from "@/components/dashboard/ui";
 import { requireUser } from "@/lib/auth/current-user";
 import { getAccess } from "@/lib/access";
+import { VIP_PRICE_SUMMARY } from "@/lib/plan";
 import { isService } from "@/lib/sporty/sports";
 
 export const metadata: Metadata = { title: "Generate – Quest Codes" };
@@ -45,9 +46,9 @@ export default async function GeneratePage({
         <Locked
           icon={<HugeiconsIcon icon={Crown02Icon} size={22} />}
           title="A VIP subscription is required"
-          body="Upgrade to generate codes. If you already subscribed in the Telegram bot, it unlocks here automatically."
+          body={`VIP is ${VIP_PRICE_SUMMARY}, paid by bank transfer. If you already subscribed in the Telegram bot, it unlocks here automatically.`}
           href="/dashboard/upgrade"
-          cta="See upgrade options"
+          cta="See pricing"
         />
       ) : (
         <Generator initialService={isService(sport) ? sport : "football"} />

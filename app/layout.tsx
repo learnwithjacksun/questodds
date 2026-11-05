@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { SupportWidget } from "@/components/support/support-widget";
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./landing.css";
 import "./auth.css";
 import "./dashboard.css";
+import "./plan.css";
+import "./support.css";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geist.variable} ${sourceSerif.variable}`}>
       <body>
         <Providers>{children}</Providers>
+        <SupportWidget />
       </body>
     </html>
   );

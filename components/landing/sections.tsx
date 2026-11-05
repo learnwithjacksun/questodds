@@ -1,5 +1,6 @@
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
+import { VIP_DAYS, VIP_PRICE_SUMMARY } from "@/lib/plan";
 import {
   ComputerIcon,
   Coupon01Icon,
@@ -16,7 +17,7 @@ type Item = { icon: IconSvgElement; title: string; body: string };
 const STEPS: (Item & { n: string })[] = [
   { n: "01", icon: UserAdd01Icon, title: "Create an account", body: "Sign up on the web with just your email." },
   { n: "02", icon: Layers01Icon, title: "Pick a service", body: "Football, eFootball or vFootball from your dashboard." },
-  { n: "03", icon: Coupon01Icon, title: "Get your codes", body: "We scan fixtures and mint booking codes. You open them on SportyBet and decide." },
+  { n: "03", icon: Coupon01Icon, title: "Get your codes", body: "With VIP active, we scan fixtures and mint booking codes. You open them on SportyBet and decide." },
 ];
 
 const SERVICES: Item[] = [
@@ -26,6 +27,14 @@ const SERVICES: Item[] = [
 ];
 
 const FAQS: { q: string; a: string }[] = [
+  {
+    q: "How much does it cost?",
+    a: `Creating an account is free. VIP costs ${VIP_PRICE_SUMMARY}, paid by bank transfer in naira. It's a one-time payment and doesn't renew automatically.`,
+  },
+  {
+    q: "What happens when VIP ends?",
+    a: `You keep your account, but code generation locks until you pay again. Paying before it ends adds ${VIP_DAYS} days to the time you have left.`,
+  },
   {
     q: "Does Quest Codes place bets for me?",
     a: "No. It only generates booking codes. You open a code on SportyBet and choose whether to stake.",

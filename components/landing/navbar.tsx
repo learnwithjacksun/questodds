@@ -9,6 +9,7 @@ import { LogoMark } from "@/components/brand/logo-mark";
 const LINKS = [
   { href: "#services", label: "Services" },
   { href: "#how-it-works", label: "How it works" },
+  { href: "#pricing", label: "Pricing" },
   { href: "#telegram", label: "Telegram" },
   { href: "#faq", label: "FAQs" },
   { href: "/login", label: "Log in" },

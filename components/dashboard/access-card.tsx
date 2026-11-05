@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, CheckmarkCircle02Icon, Crown02Icon } from "@hugeicons/core-free-icons";
 import { TelegramLogo } from "@/components/telegram/logo";
 import type { Access } from "@/lib/access";
+import { VIP_PRICE_SUMMARY } from "@/lib/plan";
 
 type View = { icon: React.ReactNode; tone: "ok" | "warn" | "idle"; title: string; body: string; href?: string; cta?: string };
 
@@ -32,7 +33,7 @@ function describe(access: Access): View {
       title: access.isAdmin ? "Admin access" : "VIP active",
       body: access.isAdmin
         ? "You can generate codes without a subscription."
-        : `${access.daysLeft} day${access.daysLeft === 1 ? "" : "s"} left${access.expDate ? ` · renews by ${access.expDate}` : ""}.`,
+        : `${access.daysLeft} day${access.daysLeft === 1 ? "" : "s"} left${access.expDate ? ` · ends ${access.expDate}` : ""}.`,
       href: access.isAdmin ? undefined : "/dashboard/upgrade",
       cta: access.isAdmin ? undefined : "Extend",
     };
@@ -41,13 +42,13 @@ function describe(access: Access): View {
     icon: <HugeiconsIcon icon={Crown02Icon} size={22} />,
     tone: "idle",
     title: "No active subscription",
-    body: "Upgrade to generate Football, eFootball and vFootball codes. A subscription bought on Telegram works here too.",
+    body: `VIP is ${VIP_PRICE_SUMMARY}. It unlocks code generation here and on the Telegram bot, and a plan bought on Telegram works here too.`,
     href: "/dashboard/upgrade",
     cta: "Upgrade",
   };
 }
 
-export function AccessCard({ access }: { access: Access }) {
+export function AccessCard({ access, hideAction = false }: { access: Access; hideAction?: boolean }) {
   const v = describe(access);
   return (
     <div className={`qo-card qo-access is-${v.tone}`}>
@@ -58,7 +59,7 @@ export function AccessCard({ access }: { access: Access }) {
         <h3>{v.title}</h3>
         <p>{v.body}</p>
       </div>
-      {v.href && v.cta && (
+      {!hideAction && v.href && v.cta && (
         <Link href={v.href} className="qo-btn-primary qo-btn-sm">
           {v.cta}
         </Link>

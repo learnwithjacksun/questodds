@@ -1,0 +1,79 @@
+/* Plan / pricing blocks, shared by the landing Pricing section and the dashboard Upgrade page.
+   Selectors are prefixed with .qo-card because landing.css styles ".qo-card p" globally. */
+.qo-eyebrow { display: block; margin-bottom: 14px; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: var(--muted); }
+
+.qo-card .qo-plan-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 14px; color: var(--text); font-size: inherit; }
+.qo-card .qo-plan-price strong { font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -0.07em; }
+.qo-card .qo-plan-price span { font-size: 18px; font-weight: 500; letter-spacing: -0.03em; color: var(--muted); }
+.qo-card .qo-plan-lead { margin: 0; max-width: 360px; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+
+.qo-plan-list { margin: 0; padding: 0; list-style: none; }
+.qo-plan-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 15px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.qo-plan-list li:first-child { padding-top: 0; }
+.qo-plan-list li:last-child { border-bottom: 0; }
+.qo-plan-list svg { flex: none; margin-top: 1px; color: #0f9d4b; }
+
+/* Landing */
+.qo-pricing { display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; padding: 40px; }
+.qo-pricing-side .qo-fine { margin: 18px 0 0; max-width: 460px; }
+.qo-card .qo-pricing-cta, .qo-pricing-cta { width: fit-content; margin-top: 24px; }
+
+/* Dashboard */
+.qo-upgrade-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 14px; align-items: start; }
+.qo-plan { padding: 32px; }
+.qo-plan .qo-fine { margin-top: 16px; }
+.qo-card .qo-plan-note { margin: 22px 0 0; font-size: 14.5px; color: var(--muted); }
+.qo-plan-cta { width: 100%; margin-top: 24px; }
+.qo-how { padding: 28px 28px 24px; }
+.qo-how h3 { margin-bottom: 16px; }
+
+/* Numbered steps with a ring counter */
+.qo-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.qo-steps li {
+  position: relative;
+  min-height: 28px;
+  padding: 0 0 18px 42px;
+  counter-increment: step;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.qo-steps li:last-child { padding-bottom: 4px; }
+.qo-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.qo-steps strong { color: var(--text); font-weight: 600; }
+.qo-steps em { font-style: normal; font-weight: 600; color: var(--text); }
+
+@media (max-width: 1023px) {
+  .qo-pricing { gap: 32px; padding: 32px; }
+  .qo-upgrade-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 809px) {
+  .qo-pricing { grid-template-columns: 1fr; gap: 28px; padding: 28px 22px; }
+  .qo-card .qo-plan-price strong { font-size: 52px; }
+  .qo-card .qo-pricing-cta, .qo-pricing-cta { width: 100%; }
+  .qo-plan { padding: 26px 22px; }
+  .qo-how { padding: 24px 22px 20px; }
+}

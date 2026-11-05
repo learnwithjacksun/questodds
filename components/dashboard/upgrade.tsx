@@ -1,50 +1,146 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpRight01Icon, CheckmarkCircle02Icon, Loading03Icon } from "@hugeicons/core-free-icons";
-import { CopyButton } from "@/components/dashboard/copy-button";
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
+import { CheckoutPanel } from "@/components/dashboard/checkout-panel";
+import { HowPaying, PlanCard } from "@/components/dashboard/plan-card";
 import { getJson, postJson } from "@/lib/http";
-import { formatWhen } from "@/lib/format";
-import type { Checkout, PaymentStatus } from "@/lib/sporty/schemas";
+import { VIP_PRICE_LABEL, VIP_PRICE_NGN } from "@/lib/plan";
+import { checkoutSchema, type Checkout, type PaymentCheck } from "@/lib/sporty/schemas";
 
 const POLL_MS = 5000;
-const MAX_POLLS = 120; // ~10 minutes
+const MAX_POLLS = 180; // ~15 minutes of automatic checking
 
-export function Upgrade({ active }: { active: boolean }) {
+/* ---------- Keep the checkout across refreshes ----------
+ * A user who has already transferred must not lose the account/reference by reloading, and
+ * clicking "pay" again would create a second virtual account. */
+type Stored = { checkout: Checkout; paid: boolean };
+const STORAGE_KEY = "qo-checkout-v1";
+const listeners = new Set<() => void>();
+let current: string | null = null;
+let loaded = false;
+
+function readRaw(): string | null {
+  if (!loaded) {
+    loaded = true;
+    try {
+      current = sessionStorage.getItem(STORAGE_KEY);
+    } catch {
+      /* storage blocked: fall back to memory only */
+    }
+  }
+  return current;
+}
+function writeStored(value: Stored | null) {
+  current = value ? JSON.stringify(value) : null;
+  try {
+    if (current) sessionStorage.setItem(STORAGE_KEY, current);
+    else sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+  listeners.forEach((l) => l());
+}
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+function parseStored(raw: string | null): Stored | null {
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw) as { checkout?: unknown; paid?: unknown };
+    const checkout = checkoutSchema.safeParse(data.checkout);
+    return checkout.success && checkout.data.reference
+      ? { checkout: checkout.data, paid: data.paid === true }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function Upgrade({
+  active,
+  baselineExpiresAt,
+}: {
+  active: boolean;
+  /** Subscription end (epoch ms) when the page loaded: a later value means a renewal landed. */
+  baselineExpiresAt: number | null;
+}) {
   const router = useRouter();
-  const [checkout, setCheckout] = useState<Checkout | null>(null);
-  const [checking, setChecking] = useState(false);
+  const queryClient = useQueryClient();
+  const raw = useSyncExternalStore(subscribe, readRaw, () => null);
+  const stored = parseStored(raw);
+  const checkout = stored?.checkout ?? null;
+  const reference = checkout?.reference;
+  const account = checkout?.virtualAccount;
+
+  const [manualTried, setManualTried] = useState(false);
+
+  // The transfer account is single-use and expires; stop polling it and offer a fresh one.
+  const expiresAtMs = account?.expiresAt ? Date.parse(account.expiresAt) : NaN;
+  const [expired, setExpired] = useState(false);
+  useEffect(() => {
+    if (Number.isNaN(expiresAtMs)) return;
+    const check = () => setExpired(Date.now() >= expiresAtMs);
+    const first = setTimeout(check, 0);
+    const id = setInterval(check, 5000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
+  }, [expiresAtMs]);
+  const lapsed = expired && !Number.isNaN(expiresAtMs);
 
   const start = useMutation({
     mutationFn: () => postJson<Checkout>("/api/payment/initialize"),
     onSuccess: (data) => {
-      setCheckout(data);
-      setChecking(false);
+      setManualTried(false);
+      setExpired(false);
+      writeStored({ checkout: data, paid: false });
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const reference = checkout?.reference;
+  // Checks run on their own every few seconds; "I've paid" just forces one right now.
   const verify = useQuery({
     queryKey: ["payment", reference],
-    queryFn: () => getJson<PaymentStatus>(`/api/payment/${encodeURIComponent(reference ?? "")}`),
-    enabled: checking && !!reference,
+    queryFn: () => getJson<PaymentCheck>(`/api/payment/${encodeURIComponent(reference ?? "")}`),
+    enabled: !!reference && !stored?.paid && !lapsed,
     retry: false,
-    refetchInterval: (q) =>
-      q.state.data?.status === "paid" || q.state.dataUpdateCount >= MAX_POLLS ? false : POLL_MS,
+    refetchOnWindowFocus: true,
+    refetchInterval: (q) => (q.state.dataUpdateCount >= MAX_POLLS ? false : POLL_MS),
   });
 
-  const paid = verify.data?.status === "paid";
+  // Confirmed either by the checkout itself, or by the subscription extending (e.g. webhook credit).
+  const sub = verify.data?.subscription;
+  const renewed = !!sub?.active && (sub.expiresAt ?? 0) > (baselineExpiresAt ?? 0);
+  const confirmed = verify.data?.status === "paid" || renewed;
+  const paid = !!stored?.paid;
+
   useEffect(() => {
-    if (paid) {
+    if (confirmed && checkout && !paid) {
+      writeStored({ checkout, paid: true });
       toast.success("Payment confirmed. Your VIP is active.");
       router.refresh();
     }
-  }, [paid, router]);
+  }, [confirmed, checkout, paid, router]);
+
+  // Leave nothing behind once the user moves on from a confirmed payment.
+  useEffect(
+    () => () => {
+      if (parseStored(readRaw())?.paid) writeStored(null);
+    },
+    [],
+  );
+
+  const checking = verify.isFetching;
+  const gaveUp = (queryClient.getQueryState(["payment", reference])?.dataUpdateCount ?? 0) >= MAX_POLLS;
 
   if (paid) {
     return (
@@ -55,86 +151,58 @@ export function Upgrade({ active }: { active: boolean }) {
     );
   }
 
-  const account = checkout?.virtualAccount;
+  const status = verify.isError
+    ? `${verify.error.message} We'll keep trying.`
+    : manualTried && !checking
+      ? "We haven't received it yet. Bank transfers can take a minute. We'll keep checking."
+      : gaveUp
+        ? "We stopped checking automatically. Tap I've paid to check again."
+        : lapsed
+          ? "Automatic checking has stopped for this account."
+          : "Checking automatically every few seconds.";
 
   return (
-    <div className="qo-upgrade">
-      {!checkout && (
-        <button
-          type="button"
-          className="qo-btn-primary qo-gen-btn"
-          disabled={start.isPending}
-          onClick={() => start.mutate()}
-        >
-          {start.isPending ? "Preparing payment…" : active ? "Extend subscription" : "Get VIP access"}
-        </button>
-      )}
+    <div className="qo-upgrade-grid">
+      <PlanCard>
+        {checkout ? (
+          <p className="qo-plan-note">Payment started. Follow the payment details.</p>
+        ) : (
+          <button
+            type="button"
+            className="qo-btn-primary qo-plan-cta"
+            disabled={start.isPending}
+            onClick={() => start.mutate()}
+          >
+            {start.isPending
+              ? "Preparing payment…"
+              : active
+                ? `Renew for ${VIP_PRICE_LABEL}`
+                : `Pay ${VIP_PRICE_LABEL} by bank transfer`}
+          </button>
+        )}
+      </PlanCard>
 
-      {checkout && (
-        <div className="qo-card qo-checkout">
-          <div className="qo-kv">
-            <span>Amount</span>
-            <strong>₦{(checkout.amount ?? 0).toLocaleString("en-NG")}</strong>
-          </div>
-
-          {account ? (
-            <>
-              <p className="qo-checkout-help">
-                Transfer the exact amount to this account. It&apos;s generated for this payment only.
-              </p>
-              <div className="qo-kv">
-                <span>Bank</span>
-                <strong>{account.bankName}</strong>
-              </div>
-              <div className="qo-kv">
-                <span>Account name</span>
-                <strong>{account.accountName}</strong>
-              </div>
-              <div className="qo-kv">
-                <span>Account number</span>
-                <strong className="qo-mono">{account.accountNumber}</strong>
-                <CopyButton value={account.accountNumber} />
-              </div>
-              {account.expiresAt && (
-                <p className="qo-fine">Expires {formatWhen(account.expiresAt)}</p>
-              )}
-            </>
-          ) : (
-            <p className="qo-checkout-help">Use the checkout page to complete your payment.</p>
-          )}
-
-          <div className="qo-checkout-actions">
-            <button
-              type="button"
-              className="qo-btn-primary qo-btn-sm"
-              disabled={checking}
-              onClick={() => setChecking(true)}
-            >
-              {checking ? (
-                <>
-                  <HugeiconsIcon icon={Loading03Icon} size={16} className="qo-spin" aria-hidden="true" />
-                  Checking…
-                </>
-              ) : (
-                "I've paid"
-              )}
-            </button>
-            {checkout.checkoutUrl && (
-              <a href={checkout.checkoutUrl} target="_blank" rel="noopener noreferrer" className="qo-btn-ghost">
-                Open checkout page
-                <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} aria-hidden="true" />
-              </a>
-            )}
-          </div>
-
-          {checking && (
-            <p className="qo-fine" role="status">
-              {verify.isError
-                ? verify.error.message
-                : "Waiting for your transfer. This usually confirms within a minute. You can leave this page open."}
-            </p>
-          )}
-        </div>
+      {checkout ? (
+        <CheckoutPanel
+          amount={checkout.amount ?? VIP_PRICE_NGN}
+          expectedAmount={VIP_PRICE_NGN}
+          account={account}
+          reference={checkout.reference ?? ""}
+          lapsed={lapsed}
+          checking={checking}
+          status={status}
+          onPaid={async () => {
+            setManualTried(true);
+            await verify.refetch();
+          }}
+          onNewPayment={() => {
+            writeStored(null);
+            start.mutate();
+          }}
+          newPaymentPending={start.isPending}
+        />
+      ) : (
+        <HowPaying />
       )}
     </div>
   );
