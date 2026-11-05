@@ -374,3 +374,68 @@
 @media (prefers-reduced-motion: reduce) {
   .qo-line, .qo-float-logo { animation: none; }
 }
+
+/* ---------- Gallery marquee ---------- */
+.qo-gallery { padding: 56px 0 24px; overflow: hidden; }
+.qo-gallery-head { max-width: 1200px; margin: 0 auto; padding: 0 36px; }
+.qo-gallery-head .qo-h2 { margin-bottom: 8px; }
+.qo-gallery-head p { margin: 0; font-size: 16px; color: var(--muted); }
+.qo-gallery-note { max-width: 1200px; margin: 18px auto 0; padding: 0 36px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+
+.qo-marquee {
+  --gap: 16px;
+  --card-w: 210px;
+  --card-h: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin-top: 28px;
+  /* Vertical padding leaves room for the hover lift so it isn't clipped by the mask */
+  padding: 14px 0;
+  /* Faded sides */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+.qo-marquee-row {
+  display: flex;
+  width: max-content;
+  animation: qo-marquee var(--dur, 70s) linear infinite;
+  will-change: transform;
+}
+.qo-marquee-row.is-reverse { animation-direction: reverse; }
+.qo-marquee-set { display: flex; flex: none; gap: var(--gap); padding-right: var(--gap); }
+@keyframes qo-marquee { to { transform: translateX(-50%); } }
+
+/* Pause both rows while the pointer is anywhere over the gallery */
+.qo-marquee:hover .qo-marquee-row { animation-play-state: paused; }
+
+.qo-shot {
+  position: relative;
+  flex: none;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  background: rgb(244, 244, 244);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s ease, opacity 0.3s ease;
+}
+.qo-shot img { object-fit: cover; object-position: 50% 0; user-select: none; -webkit-user-drag: none; }
+/* The hovered card lifts; its neighbours step back */
+.qo-marquee:hover .qo-shot { opacity: 0.55; }
+.qo-marquee:hover .qo-shot:hover { opacity: 1; transform: translateY(-8px) scale(1.04); box-shadow: 0 22px 44px rgba(0, 0, 0, 0.18); z-index: 2; }
+
+@media (max-width: 809px) {
+  .qo-gallery { padding: 40px 0 16px; }
+  .qo-gallery-head, .qo-gallery-note { padding: 0 20px; }
+  .qo-marquee { --gap: 12px; --card-w: 150px; --card-h: 200px; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%); }
+  .qo-shot { border-radius: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No auto-scroll: show one static, horizontally scrollable strip per row */
+  .qo-marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+  .qo-marquee-row { animation: none; }
+  .qo-marquee-set[aria-hidden="true"] { display: none; }
+}
