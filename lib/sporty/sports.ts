@@ -49,5 +49,6 @@ export function isService(value: string | undefined): value is Service {
 }
 
 export function sportName(value: string): string {
+  if (value === QUEST_SPECIAL.id) return QUEST_SPECIAL.name;
   return isSport(value) ? SPORT_META[value].name : value;
 }

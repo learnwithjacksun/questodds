@@ -5,7 +5,7 @@
 .qo-card .qo-plan-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 0 0 14px; color: var(--text); font-size: inherit; }
 .qo-card .qo-plan-price strong { font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -0.07em; }
 .qo-card .qo-plan-price span { font-size: 18px; font-weight: 500; letter-spacing: -0.03em; color: var(--muted); }
-.qo-card .qo-plan-lead { margin: 0; max-width: 360px; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+.qo-card .qo-plan-lead { margin: 0 0 22px; max-width: 360px; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
 
 .qo-plan-list { margin: 0; padding: 0; list-style: none; }
 .qo-plan-list li {
@@ -66,9 +66,15 @@
 .qo-steps strong { color: var(--text); font-weight: 600; }
 .qo-steps em { font-style: normal; font-weight: 600; color: var(--text); }
 
+@media (min-width: 1024px) {
+  /* Keep the price in view while the longer payment details scroll */
+  .qo-plan { position: sticky; top: 92px; }
+}
 @media (max-width: 1023px) {
   .qo-pricing { gap: 32px; padding: 32px; }
   .qo-upgrade-grid { grid-template-columns: 1fr; }
+  /* On phones the payment details matter first; the plan recap follows */
+  .qo-upgrade-grid > .qo-checkout { order: -1; }
 }
 @media (max-width: 809px) {
   .qo-pricing { grid-template-columns: 1fr; gap: 28px; padding: 28px 22px; }

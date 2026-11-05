@@ -159,6 +159,8 @@ export const globalStatsSchema = z.object({
     overallBoomRate: z.string(),
     overallBoomRateNum: z.number(),
     bySport: z.record(z.string(), sportStatsSchema),
+    /** Quest Special slips, also present under bySport.quest_special. */
+    questSpecial: sportStatsSchema.optional(),
     recentBoomed: z.array(
       z.object({
         code: z.string(),
@@ -197,6 +199,7 @@ export const userStatsSchema = z.object({
       .object({ code: z.string(), odds: z.number(), sport: z.string(), date: z.string() })
       .nullable(),
     bySport: z.record(z.string(), sportStatsSchema),
+    questSpecial: sportStatsSchema.optional(),
     recentSlips: z.array(recentSlipSchema),
   }),
 });

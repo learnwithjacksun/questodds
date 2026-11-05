@@ -25,8 +25,13 @@ import {
 
 const DEFAULT_BASE = "https://sportybetcodeautomation.onrender.com";
 
-/** Render's free tier can take ~30–60s to wake, so reads get a generous timeout. */
-const READ_TIMEOUT_MS = 45_000;
+/**
+ * Reads fail fast: a page must not hang for a minute on a sleeping backend (Render's free tier needs
+ * ~30–60s to wake). Callers show an "unavailable, try again" state instead, and wakeBackend()
+ * starts the wake-up in the background. Long jobs opt in to longer timeouts explicitly.
+ */
+const READ_TIMEOUT_MS = 10_000;
+const WRITE_TIMEOUT_MS = 25_000;
 const GENERATE_TIMEOUT_MS = 5 * 60_000;
 
 export class SportyApiError extends Error {
@@ -88,6 +93,7 @@ export async function getSubscription(telegramId: string): Promise<Subscription>
   const res = await request(
     `/api/subscription/${encodeURIComponent(telegramId)}`,
     subscriptionResponseSchema,
+    { timeoutMs: 8_000 },
   );
   return res.subscription;
 }
@@ -108,6 +114,7 @@ export async function startQuestSpecial(userId: string): Promise<QuestSpecialSta
   const res = await request("/api/quest-special/start", questSpecialStartSchema, {
     method: "POST",
     body: { userId },
+    timeoutMs: WRITE_TIMEOUT_MS,
   });
   if (!res.success) throw new SportyApiError(res.error ?? "Couldn't start Quest Special.", 403);
   return res;
@@ -144,11 +151,23 @@ export async function initializePayment(telegramId: string, email?: string): Pro
   const res = await request("/api/payment/initialize", checkoutSchema, {
     method: "POST",
     body: { telegramId, email },
+    timeoutMs: WRITE_TIMEOUT_MS,
   });
   if (!res.success) throw new SportyApiError(res.error ?? "Couldn't start the payment.");
   return res;
 }
 
 export function verifyPayment(reference: string): Promise<PaymentStatus> {
-  return request(`/api/payment/verify/${encodeURIComponent(reference)}`, paymentStatusSchema);
+  return request(`/api/payment/verify/${encodeURIComponent(reference)}`, paymentStatusSchema, {
+    timeoutMs: 15_000,
+  });
+}
+
+/**
+ * Fire-and-forget ping so a sleeping backend starts waking while the user is still reading the
+ * page. Never throws and never blocks rendering.
+ */
+export function wakeBackend(): void {
+  const base = (process.env.SPORTY_API_BASE || DEFAULT_BASE).replace(/\/$/, "");
+  fetch(`${base}/ping`, { signal: AbortSignal.timeout(60_000), cache: "no-store" }).catch(() => {});
 }

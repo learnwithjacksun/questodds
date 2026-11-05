@@ -79,8 +79,9 @@ export function QuestSpecial() {
         </div>
         <h3>{QUEST_SPECIAL.name}</h3>
         <p>
-          Scans live vFootball rounds for about a match (3–4 minutes). Around the 38th and 80th minutes,
-          if a match fits its rules, it mints a single-leg booking code for you.
+          Scans live vFootball rounds for up to 10 minutes. At the 41st, 43rd, 85th and 88th minutes, if a
+          match fits its rules, it mints a single-leg booking code for you. Each scan counts toward your
+          daily limit.
         </p>
 
         {active ? (

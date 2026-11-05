@@ -179,6 +179,18 @@
 .qo-scan-stop { margin-top: 16px; }
 .qo-code-missing { font-size: 22px; color: var(--muted); letter-spacing: -0.03em; }
 
+/* Quest Special tally */
+.qo-span-all { grid-column: 1 / -1; }
+.qo-qs { display: flex; align-items: center; justify-content: space-between; gap: 20px 32px; flex-wrap: wrap; padding: 20px 24px; }
+.qo-qs-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.qo-qs-title .qo-icon-badge { margin: 0; flex: none; }
+.qo-qs-title h3 { margin: 0; font-size: 19px; }
+.qo-card .qo-qs-title p { margin: 2px 0 0; font-size: 13.5px; }
+.qo-qs-stats { display: flex; gap: 12px 36px; margin: 0; padding: 0; }
+.qo-qs-stats div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qo-qs-stats dt { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.qo-qs-stats dd { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+
 .qo-stat { display: flex; flex-direction: column; gap: 4px; padding: 20px 22px; }
 .qo-stat-label { font-size: 13px; font-weight: 500; color: var(--muted); }
 .qo-stat-value { font-size: 34px; font-weight: 600; letter-spacing: -0.05em; line-height: 1.1; }
@@ -352,6 +364,9 @@
   .qo-grid-2, .qo-grid-3 { grid-template-columns: 1fr; }
   .qo-grid-4 { grid-template-columns: repeat(2, 1fr); }
   .qo-stat { padding: 16px 18px; }
+  .qo-qs { padding: 18px 18px 16px; }
+  .qo-qs-stats { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .qo-qs-stats dd { font-size: 22px; }
   .qo-stat-value { font-size: 28px; }
   .qo-access { flex-wrap: wrap; align-items: flex-start; padding: 20px; }
   .qo-access-text { flex-basis: calc(100% - 70px); }
@@ -372,3 +387,25 @@
 @media (prefers-reduced-motion: reduce) {
   .qo-spin, .qo-skel, .qo-loader-logo, .qo-loader-bar::after { animation: none; }
 }
+
+/* ---------- Error / not-found pages ---------- */
+.qo-error {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 96px 24px;
+  text-align: center;
+  isolation: isolate;
+}
+.qo-error::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--qo-hero-bg) center / cover no-repeat #f4f4f4; opacity: 0.55; }
+.qo-error h1 { margin: 0; font-size: 52px; line-height: 1.05; font-weight: 500; letter-spacing: -0.06em; }
+.qo-error p { margin: 0; max-width: 440px; font-size: 17px; line-height: 1.5; color: var(--muted); }
+.qo-error-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 10px; }
+.qo-error-actions .qo-btn-primary { border: 0; cursor: pointer; text-decoration: none; }
+.qo-error-actions .qo-btn-ghost { height: 56px; padding: 0 28px; font-size: 15px; font-weight: 600; }
+.qo-error-ref { margin-top: 6px; font-size: 12px; color: var(--muted); }
+@media (max-width: 809px) { .qo-error h1 { font-size: 38px; } .qo-error p { font-size: 16px; } }

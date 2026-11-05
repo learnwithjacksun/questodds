@@ -1,13 +1,50 @@
+import { HugeiconsIcon } from "@hugeicons/react";
 import { getGlobalStats, getLatestSlips, getUserStats } from "@/lib/sporty/client";
-import { boomRatePercent, hasReliableRate, settledCount } from "@/lib/sporty/stats";
+import { boomRatePercent, hasReliableRate, questSpecialTally, settledCount, type Tally } from "@/lib/sporty/stats";
 import { formatOdds } from "@/lib/format";
 import { SPORTS, type UserStats } from "@/lib/sporty/schemas";
-import { sportName } from "@/lib/sporty/sports";
+import { QUEST_SPECIAL, sportName } from "@/lib/sporty/sports";
 import { SlipsTable, StatTile, Unavailable } from "@/components/dashboard/ui";
 
 function rate(stats: { boomed: number; lost: number }) {
   const r = boomRatePercent(stats);
   return r === null ? "—" : `${r}%`;
+}
+
+/** Quest Special's own tally. Community figures stay hidden until enough slips have settled. */
+function QuestSpecialCard({ tally, community = false }: { tally: Tally; community?: boolean }) {
+  const showRate = community ? hasReliableRate(tally) : settledCount(tally) > 0;
+  return (
+    <div className="qo-card qo-qs">
+      <div className="qo-qs-title">
+        <span className="qo-icon-badge" aria-hidden="true">
+          <HugeiconsIcon icon={QUEST_SPECIAL.icon} size={22} />
+        </span>
+        <div>
+          <h3>{QUEST_SPECIAL.name}</h3>
+          <p>{community ? "All users" : "Your single-leg live codes"}</p>
+        </div>
+      </div>
+      <dl className="qo-qs-stats">
+        <div>
+          <dt>Signals</dt>
+          <dd>{tally.total}</dd>
+        </div>
+        <div>
+          <dt>Won</dt>
+          <dd>{tally.boomed}</dd>
+        </div>
+        <div>
+          <dt>Lost</dt>
+          <dd>{tally.lost}</dd>
+        </div>
+        <div>
+          <dt>Win rate</dt>
+          <dd>{showRate ? rate(tally) : "—"}</dd>
+        </div>
+      </dl>
+    </div>
+  );
 }
 
 /** Personal summary tiles (overview + history). */
@@ -33,6 +70,9 @@ export async function UserStatsTiles({ telegramId }: { telegramId: string }) {
         value={stats.bestBoom ? formatOdds(stats.bestBoom.odds) : "—"}
         hint={stats.bestBoom ? stats.bestBoom.code : "Nothing yet"}
       />
+      <div className="qo-span-all">
+        <QuestSpecialCard tally={questSpecialTally(stats)} />
+      </div>
     </div>
   );
 }
@@ -46,7 +86,11 @@ export async function HistorySection({ telegramId }: { telegramId: string }) {
     return <Unavailable what="Your history is" />;
   }
 
-  const services = SPORTS.map((s) => ({ id: s, ...(stats.bySport[s] ?? { total: 0, boomed: 0, lost: 0, pending: 0 }) }));
+  const quest = questSpecialTally(stats);
+  const services = [
+    ...SPORTS.map((s) => ({ id: s as string, ...(stats.bySport[s] ?? { total: 0, boomed: 0, lost: 0, pending: 0 }) })),
+    { id: QUEST_SPECIAL.id as string, ...quest },
+  ];
 
   return (
     <>
@@ -63,6 +107,10 @@ export async function HistorySection({ telegramId }: { telegramId: string }) {
           value={stats.bestBoom ? formatOdds(stats.bestBoom.odds) : "—"}
           hint={stats.bestBoom ? stats.bestBoom.code : "Nothing yet"}
         />
+      </div>
+
+      <div className="qo-dash-section">
+        <QuestSpecialCard tally={quest} />
       </div>
 
       <section className="qo-dash-section">
@@ -134,6 +182,11 @@ export async function ProofFeed() {
           <StatTile label="Settled" value={settledCount(global)} />
           <StatTile label="Win rate" value={hasReliableRate(global) ? rate(global) : "—"} />
           <StatTile label="Pending" value={global.pending} />
+        </div>
+      )}
+      {global && (
+        <div className="qo-feed">
+          <QuestSpecialCard tally={questSpecialTally(global)} community />
         </div>
       )}
 

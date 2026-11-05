@@ -38,9 +38,14 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   };
 });
 
-/** For pages: redirect to /login when signed out. */
+/**
+ * For pages: redirect to /login when signed out.
+ * A session cookie whose user no longer exists (database reset, deleted account) must be cleared
+ * first. Going straight to /login would bounce back to /dashboard through proxy.ts, which only
+ * checks the cookie's signature, and loop forever (ERR_TOO_MANY_REDIRECTS).
+ */
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  return user;
+  if (user) return user;
+  redirect((await getSession()) ? "/api/auth/reset" : "/login");
 }
