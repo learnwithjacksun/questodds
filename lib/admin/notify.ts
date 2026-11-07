@@ -4,7 +4,10 @@ import { renderEmail } from "@/lib/email-template";
 import { sendEmail } from "@/lib/mail";
 import { ownerIds } from "@/lib/auth/roles";
 import { User } from "@/lib/models/user";
-import { formatNaira } from "@/lib/plan";
+import { formatNaira, VIP_DAYS } from "@/lib/plan";
+import { SITE_URL } from "@/lib/site";
+import { getSubscription } from "@/lib/sporty/client";
+import { paymentIssueMessage, SUPPORT_CONTACTS, whatsappLink } from "@/lib/support";
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -49,6 +52,52 @@ async function notifyOwners(subject: string, heading: string, intro: string, not
     await Promise.allSettled(to.map((address) => sendEmail({ to: address, subject, html })));
   } catch (err) {
     console.error("[notify] couldn't email owners", err);
+  }
+}
+
+/**
+ * Receipt for the person who paid. Best effort like the owner alerts: it never throws and never
+ * affects the payment. Sent from markPaid, so it goes out once per payment.
+ */
+export async function sendReceipt(p: { userId: string; reference: string; amount: number }) {
+  try {
+    await connectDB();
+    const user = await User.findById(p.userId).select("username email").lean();
+    if (!user) return;
+
+    // The plan dates are a nicety: send the receipt even if the lookup fails.
+    const sub = await getSubscription(p.userId).catch(() => null);
+    const plan = [
+      `Plan: VIP, ${VIP_DAYS} days`,
+      sub?.expDate ? `Active until: ${escapeHtml(sub.expDate)}` : null,
+      sub?.active ? `Days left: ${escapeHtml(String(sub.daysLeft))}` : null,
+    ]
+      .filter(Boolean)
+      .join("<br>");
+
+    const support = SUPPORT_CONTACTS.map(
+      (s) =>
+        `<a href="${whatsappLink(s.number, paymentIssueMessage(p.reference))}" style="color:#111111">${s.name} on WhatsApp</a>`,
+    ).join(" or ");
+
+    const subject = `Your Quest Codes payment receipt (${formatNaira(p.amount)})`;
+    if (!process.env.BREVO_API_KEY && process.env.NODE_ENV !== "production") {
+      console.log(`[receipt] ${subject} -> ${user.email}`);
+      return;
+    }
+    await sendEmail({
+      to: user.email,
+      subject,
+      html: renderEmail({
+        preheader: `We received your payment of ${formatNaira(p.amount)}. Your VIP is active.`,
+        heading: "Payment received",
+        intro: `Thanks, ${escapeHtml(user.username)}. We received your payment of <strong>${escapeHtml(formatNaira(p.amount))}</strong>.<br><br>${plan}<br>Reference: ${escapeHtml(p.reference)}`,
+        note: `<a href="${SITE_URL}/dashboard" style="color:#111111">Open your dashboard</a> to generate codes. Want the same plan in the Telegram bot? Link Telegram in Settings. There is no second payment.<br><br>Problem with this payment? Message ${support}.`,
+        reason: "You received this email because you made a payment on Quest Codes.",
+      }),
+    });
+  } catch (err) {
+    console.error("[receipt] couldn't email the receipt", err);
   }
 }
 

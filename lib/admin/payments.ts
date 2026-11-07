@@ -1,6 +1,6 @@
 import "server-only";
 import { connectDB } from "@/lib/db";
-import { notifyPayment } from "@/lib/admin/notify";
+import { notifyPayment, sendReceipt } from "@/lib/admin/notify";
 import { Payment } from "@/lib/models/payment";
 import { VIP_DAYS } from "@/lib/plan";
 import { getSubscription } from "@/lib/sporty/client";
@@ -36,17 +36,21 @@ export async function markPaid(reference: string): Promise<void> {
     ).lean();
     if (!payment) return;
 
+    const amount = payment.quotedAmount ?? payment.expectedAmount;
+    // The payer's receipt is independent of the owner alert: one failing never stops the other.
+    const receipt = sendReceipt({ userId: payment.userId, reference, amount });
     const added = await daysAdded(payment.userId, payment.expiryBefore ?? undefined);
     await notifyPayment({
       userId: payment.userId,
       reference,
-      amount: payment.quotedAmount ?? payment.expectedAmount,
+      amount,
       // Half a day of slack for clock drift and the time between paying and this check.
       warning:
         added !== null && added > VIP_DAYS + 0.5
           ? `This payment added about ${added.toFixed(1)} days, not ${VIP_DAYS}. It may have been credited twice. Check the user's plan.`
           : undefined,
     });
+    await receipt;
   } catch (err) {
     console.error("[payment] couldn't mark paid", err);
   }
