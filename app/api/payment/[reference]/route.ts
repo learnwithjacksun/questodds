@@ -1,8 +1,22 @@
 import { after, NextResponse } from "next/server";
 import { markPaid } from "@/lib/admin/payments";
+import { connectDB } from "@/lib/db";
+import { Payment } from "@/lib/models/payment";
 import { guardApi, upstreamError } from "@/lib/api-guard";
 import { getSubscription, verifyPayment } from "@/lib/sporty/client";
-import type { PaymentCheck } from "@/lib/sporty/schemas";
+import type { PaymentCheck, PaymentStatus } from "@/lib/sporty/schemas";
+
+/** References being checked right now on this instance. */
+const checking = new Set<string>();
+
+async function isRecordedPaid(reference: string): Promise<boolean> {
+  try {
+    await connectDB();
+    return !!(await Payment.exists({ reference, status: "paid" }));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * "I've paid": checks one payment once and returns the live subscription with it. The page polls
@@ -23,8 +37,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ referen
     return NextResponse.json({ error: "Unknown payment reference" }, { status: 404 });
   }
 
+  // Ask the payment service as rarely as possible: once we've recorded a payment as paid it is never
+  // checked again, and two checks for one reference never run at the same time.
+  const alreadyPaid = await isRecordedPaid(reference);
+  const concurrent = checking.has(reference);
+  if (!alreadyPaid && !concurrent) checking.add(reference);
+
   const [payment, subscription] = await Promise.allSettled([
-    verifyPayment(reference),
+    alreadyPaid
+      ? Promise.resolve<PaymentStatus>({ success: true, status: "paid" })
+      : concurrent
+        ? Promise.resolve<PaymentStatus>({ success: false, status: "unknown" })
+        : verifyPayment(reference).finally(() => checking.delete(reference)),
     getSubscription(guard.apiUserId),
   ]);
 

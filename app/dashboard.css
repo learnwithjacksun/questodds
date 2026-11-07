@@ -162,6 +162,8 @@
 .qo-access { display: flex; align-items: center; gap: 18px; padding: 22px 24px; }
 .qo-access .qo-icon-badge { margin: 0; flex: none; }
 .qo-access-text { flex: 1; min-width: 0; }
+.qo-access-text .qo-fine { margin: 8px 0 0; }
+.qo-access-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .qo-access-text h3 { font-size: 19px; }
 .qo-access.is-ok .qo-icon-badge { background: rgba(23, 201, 100, 0.12); color: #0f9d4b; }
 .qo-access.is-warn .qo-icon-badge { background: rgba(245, 165, 36, 0.14); color: #b36b00; }

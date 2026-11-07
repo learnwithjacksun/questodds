@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { after } from "next/server";
+import { getAccess } from "@/lib/access";
 import { getApiUserId } from "@/lib/api-user";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { connectDB } from "@/lib/db";
@@ -25,6 +26,8 @@ export async function POST() {
       if (!checkout.reference) return;
       try {
         await connectDB();
+        // Remember where the subscription ended before this payment, to verify what it adds later.
+        const before = await getAccess(user).catch(() => null);
         await Payment.updateOne(
           { reference: checkout.reference },
           {
@@ -34,6 +37,7 @@ export async function POST() {
               ...(telegramId ? { telegramId } : {}),
               expectedAmount: VIP_PRICE_NGN,
               quotedAmount: checkout.amount,
+              ...(before && !before.unavailable ? { expiryBefore: before.expiresAt ?? 0 } : {}),
               status: "initiated",
               createdAt: new Date(),
             },

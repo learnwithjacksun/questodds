@@ -68,7 +68,13 @@ export async function notifyNewUser(user: { username: string; email: string }) {
   );
 }
 
-export async function notifyPayment(p: { userId: string; reference: string; amount: number }) {
+export async function notifyPayment(p: {
+  userId: string;
+  reference: string;
+  amount: number;
+  /** Set when something looks wrong, e.g. a payment that added too many days. */
+  warning?: string;
+}) {
   let who = "A user";
   try {
     await connectDB();
@@ -78,9 +84,11 @@ export async function notifyPayment(p: { userId: string; reference: string; amou
     // Still worth sending without the name.
   }
   await notifyOwners(
-    `Payment received: ${formatNaira(p.amount)}`,
-    "Payment received",
-    `${who} paid <strong>${escapeHtml(formatNaira(p.amount))}</strong> for VIP.`,
+    `${p.warning ? "Check this payment" : "Payment received"}: ${formatNaira(p.amount)}`,
+    p.warning ? "Payment received, needs a check" : "Payment received",
+    `${who} paid <strong>${escapeHtml(formatNaira(p.amount))}</strong> for VIP.${
+      p.warning ? `<br><strong>${escapeHtml(p.warning)}</strong>` : ""
+    }`,
     `Reference: ${escapeHtml(p.reference)}`,
   );
 }

@@ -11,6 +11,8 @@ const paymentSchema = new Schema(
     /** Price we expect (plan price) and what the payment provider actually quoted. */
     expectedAmount: { type: Number, required: true },
     quotedAmount: { type: Number },
+    /** Subscription end (epoch ms) when checkout started. Lets us spot a payment that added more than one plan. */
+    expiryBefore: { type: Number },
     status: { type: String, enum: ["initiated", "paid"], default: "initiated", index: true },
     paidAt: { type: Date },
     createdAt: { type: Date, default: Date.now, index: true },

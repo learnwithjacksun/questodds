@@ -1,10 +1,20 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, CheckmarkCircle02Icon, Crown02Icon } from "@hugeicons/core-free-icons";
+import { TelegramButton } from "@/components/telegram/telegram-button";
 import type { Access } from "@/lib/access";
 import { VIP_PRICE_SUMMARY } from "@/lib/plan";
 
-type View = { icon: React.ReactNode; tone: "ok" | "warn" | "idle"; title: string; body: string; href?: string; cta?: string };
+type View = {
+  icon: React.ReactNode;
+  tone: "ok" | "warn" | "idle";
+  title: string;
+  body: string;
+  href?: string;
+  cta?: string;
+  /** Active plan but no Telegram linked: offer the optional sync with the bot. */
+  offerTelegram?: boolean;
+};
 
 function describe(access: Access): View {
   if (access.unavailable) {
@@ -25,6 +35,7 @@ function describe(access: Access): View {
         : `${access.daysLeft} day${access.daysLeft === 1 ? "" : "s"} left${access.expDate ? ` · ends ${access.expDate}` : ""}.`,
       href: access.isAdmin ? undefined : "/dashboard/upgrade",
       cta: access.isAdmin ? undefined : "Extend",
+      offerTelegram: !access.isAdmin && !access.linked,
     };
   }
   return {
@@ -47,11 +58,25 @@ export function AccessCard({ access, hideAction = false }: { access: Access; hid
       <div className="qo-access-text">
         <h3>{v.title}</h3>
         <p>{v.body}</p>
+        {!hideAction && v.offerTelegram && (
+          <p className="qo-fine">
+            Want to use it in the Telegram bot too? Sync it. It&apos;s the same plan, so there&apos;s no second payment.
+          </p>
+        )}
       </div>
-      {!hideAction && v.href && v.cta && (
-        <Link href={v.href} className="qo-btn-primary qo-btn-sm">
-          {v.cta}
-        </Link>
+      {!hideAction && (v.offerTelegram || (v.href && v.cta)) && (
+        <div className="qo-access-actions">
+          {v.offerTelegram && (
+            <TelegramButton intent="link" className="qo-btn-ghost qo-btn-sm">
+              Sync with Telegram bot
+            </TelegramButton>
+          )}
+          {v.href && v.cta && (
+            <Link href={v.href} className="qo-btn-primary qo-btn-sm">
+              {v.cta}
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );
