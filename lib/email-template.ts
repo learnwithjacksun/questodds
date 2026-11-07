@@ -17,8 +17,8 @@ type EmailContent = {
   heading: string;
   /** Intro line(s) above the code. Trusted HTML written in this repo, never user input. */
   intro: string;
-  /** The one-time code, shown large with no box around it. */
-  code: string;
+  /** The one-time code, shown large with no box around it. Left out for plain notifications. */
+  code?: string;
   /** Small print under the code (expiry, "ignore this email"). */
   note: string;
   /** Why they got this email, shown in the footer. */
@@ -58,7 +58,7 @@ export function renderEmail(c: EmailContent): string {
 
 <tr><td style="font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.3;padding-bottom:12px">${c.heading}</td></tr>
 <tr><td style="font-size:15px;line-height:1.6;color:#333333;padding-bottom:8px">${c.intro}</td></tr>
-<tr><td style="font-size:36px;font-weight:700;letter-spacing:0.35em;padding:14px 0 14px">${c.code}</td></tr>
+${c.code ? `<tr><td style="font-size:36px;font-weight:700;letter-spacing:0.35em;padding:14px 0 14px">${c.code}</td></tr>` : ""}
 <tr><td style="font-size:14px;line-height:1.6;color:${MUTED};padding-bottom:32px">${c.note}</td></tr>
 
 <tr><td style="border-top:1px solid #e6e6e6;padding-top:20px;font-size:12px;line-height:1.7;color:${FAINT}">

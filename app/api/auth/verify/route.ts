@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { notifyNewUser } from "@/lib/admin/notify";
 import { User } from "@/lib/models/user";
 import { verifyCode } from "@/lib/auth/otp";
 import { createSession } from "@/lib/auth/session";
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
     }
 
     let user = await User.findOne({ email });
+    let isNew = false;
     if (!user) {
       // A new account can only come from a registration code that carried the 18+ confirmation.
       if (!result.username || result.ageConfirmed !== true) {
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
         }
         throw err;
       }
+      isNew = true;
     } else if (!user.emailVerifiedAt) {
       user.emailVerifiedAt = new Date();
       await user.save();
@@ -60,6 +63,11 @@ export async function POST(req: Request) {
         { error: "This account is suspended. Contact support on WhatsApp." },
         { status: 403 },
       );
+    }
+
+    if (isNew) {
+      const created = { username: user.username, email: user.email };
+      after(() => notifyNewUser(created));
     }
 
     await createSession(user.id, user.tokenVersion ?? 0);

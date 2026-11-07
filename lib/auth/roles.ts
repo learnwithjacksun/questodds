@@ -5,7 +5,7 @@ export type Role = "user" | "admin" | "owner";
 const ranks: Record<Role, number> = { user: 0, admin: 1, owner: 2 };
 
 /** OWNER_TELEGRAM_IDS bootstrap: these Telegram IDs are always owners, whatever the database says. */
-function ownerIds(): Set<string> {
+export function ownerIds(): Set<string> {
   return new Set(
     (process.env.OWNER_TELEGRAM_IDS ?? "")
       .split(",")
