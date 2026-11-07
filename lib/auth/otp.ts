@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { Otp } from "@/lib/models/otp";
+import { renderEmail } from "@/lib/email-template";
 import { sendEmail } from "@/lib/mail";
 
 export const OTP_TTL_MS = 10 * 60 * 1000;
@@ -50,12 +51,14 @@ export async function issueCode(
   await sendEmail({
     to: email,
     subject: `${code} is your Quest Codes verification code`,
-    html: `<div style="font-family:system-ui,sans-serif;max-width:420px;margin:auto">
-      <h2 style="letter-spacing:-0.03em">Your Quest Codes verification code</h2>
-      <p style="font-size:36px;font-weight:700;letter-spacing:0.4em;margin:16px 0">${code}</p>
-      <p style="color:#6b6b6b">It expires in 10 minutes. If you didn't request it, ignore this email.</p>
-      <p style="color:#9a9a9a;font-size:12px">Quest Codes is an independent platform, not affiliated with SportyBet.</p>
-    </div>`,
+    html: renderEmail({
+      preheader: `Your Quest Codes verification code is ${code}. It expires in 10 minutes.`,
+      heading: "Your verification code",
+      intro: "Enter this code to continue signing in to Quest Codes.",
+      code,
+      note: "It expires in 10 minutes. If you didn&rsquo;t request it, you can ignore this email.",
+      reason: "You received this email because a verification code was requested for this address.",
+    }),
   });
 }
 

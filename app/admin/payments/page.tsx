@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { ReverifyButton } from "@/components/admin/reverify-button";
 import { PageHead, Skeleton } from "@/components/dashboard/ui";
 import { connectDB } from "@/lib/db";
 import { nowMs } from "@/lib/admin/time";
@@ -35,6 +36,7 @@ async function PaymentsBody() {
                 <th>Amount</th>
                 <th>Status</th>
                 <th>Started</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -59,6 +61,7 @@ async function PaymentsBody() {
                       </span>
                     </td>
                     <td>{formatWhen(p.createdAt.toISOString())}</td>
+                    <td>{p.status !== "paid" && <ReverifyButton reference={p.reference} />}</td>
                   </tr>
                 );
               })}
@@ -75,8 +78,9 @@ export default function AdminPaymentsPage() {
     <>
       <PageHead title="Website" accent="payments">
         Checkouts started on the site. Payments made in the Telegram bot aren&apos;t listed. A payment is
-        confirmed once the user&apos;s browser sees it paid, so an old &quot;Not confirmed&quot; row can still be
-        paid. Check that user&apos;s live VIP status before assuming otherwise.
+        marked paid when the user&apos;s browser sees it confirmed, so a row can stay &quot;Waiting&quot; or
+        &quot;Not confirmed&quot; if they paid and closed the page. Press Re-verify to check it with the payment
+        service and update the record.
       </PageHead>
       <Suspense fallback={<Skeleton height={420} />}>
         <PaymentsBody />

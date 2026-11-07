@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { AdminChallenge } from "@/lib/models/admin-challenge";
+import { renderEmail } from "@/lib/email-template";
 import { sendEmail } from "@/lib/mail";
 
 export const ADMIN_CODE_TTL_MS = 10 * 60 * 1000;
@@ -48,11 +49,14 @@ export async function issueAdminCode(userId: string, email: string): Promise<Iss
   await sendEmail({
     to: email,
     subject: `${code} is your Quest Codes admin code`,
-    html: `<div style="font-family:system-ui,sans-serif;max-width:420px;margin:auto">
-      <h2 style="letter-spacing:-0.03em">Quest Codes admin sign-in</h2>
-      <p style="font-size:34px;font-weight:700;letter-spacing:0.3em;margin:16px 0">${code}</p>
-      <p style="color:#6b6b6b">It expires in 10 minutes. If you did not just open the admin area, someone is signed in to your account. Change your email password and tell the other admins.</p>
-    </div>`,
+    html: renderEmail({
+      preheader: `Your Quest Codes admin code is ${code}. It expires in 10 minutes.`,
+      heading: "Admin sign-in code",
+      intro: "Enter this code to open the Quest Codes admin area.",
+      code,
+      note: "It expires in 10 minutes. If you did not just open the admin area, someone is signed in to your account. Change your email password and tell the other admins.",
+      reason: "You received this email because the admin area was opened with your account.",
+    }),
   });
   return { ok: true };
 }

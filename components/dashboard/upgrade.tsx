@@ -150,11 +150,15 @@ export function Upgrade({
   useEffect(() => {
     if (confirmed && checkout && !paid) {
       writeStored({ checkout, paid: true });
+      // Confirmed through the subscription: ask the payment check once so our payment record is
+      // marked paid too (the service credits each reference once, so this can't extend the plan).
+      if (verify.data?.status !== "paid" && !verify.isPending) verify.mutate();
       toast.success("Payment confirmed. Your VIP is active.");
       // Header badge, locked screens and generate buttons all read the subscription on the server.
       void queryClient.invalidateQueries({ queryKey: ["subscription"] });
       router.refresh();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- verify is a fresh object each render; only the inputs above matter
   }, [confirmed, checkout, paid, router, queryClient]);
 
   // Leave nothing behind once the user moves on from a confirmed payment.
