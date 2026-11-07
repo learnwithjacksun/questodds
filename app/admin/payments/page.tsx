@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { ReceiptButton } from "@/components/admin/receipt-button";
 import { ReverifyButton } from "@/components/admin/reverify-button";
 import { PageHead, Skeleton } from "@/components/dashboard/ui";
 import { connectDB } from "@/lib/db";
@@ -61,7 +62,13 @@ async function PaymentsBody() {
                       </span>
                     </td>
                     <td>{formatWhen(p.createdAt.toISOString())}</td>
-                    <td>{p.status !== "paid" && <ReverifyButton reference={p.reference} />}</td>
+                    <td>
+                      {p.status === "paid" ? (
+                        <ReceiptButton reference={p.reference} sent={!!p.receiptSentAt} />
+                      ) : (
+                        <ReverifyButton reference={p.reference} />
+                      )}
+                    </td>
                   </tr>
                 );
               })}

@@ -15,6 +15,8 @@ const paymentSchema = new Schema(
     expiryBefore: { type: Number },
     status: { type: String, enum: ["initiated", "paid"], default: "initiated", index: true },
     paidAt: { type: Date },
+    /** When the payer's receipt email was last sent (automatically or by an admin). */
+    receiptSentAt: { type: Date },
     createdAt: { type: Date, default: Date.now, index: true },
   },
   { versionKey: false },

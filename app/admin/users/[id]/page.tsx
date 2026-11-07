@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { isValidObjectId } from "mongoose";
 import { notFound } from "next/navigation";
+import { ReceiptButton } from "@/components/admin/receipt-button";
 import { ReverifyButton } from "@/components/admin/reverify-button";
 import { UserActions } from "@/components/admin/user-actions";
 import { RevealEmail } from "@/components/admin/reveal-email";
@@ -142,7 +143,13 @@ async function UserBody({ params }: { params: Promise<{ id: string }> }) {
                         </span>
                       </td>
                       <td>{formatWhen(p.createdAt.toISOString())}</td>
-                      <td>{p.status !== "paid" && <ReverifyButton reference={p.reference} />}</td>
+                      <td>
+                        {p.status === "paid" ? (
+                          <ReceiptButton reference={p.reference} sent={!!p.receiptSentAt} />
+                        ) : (
+                          <ReverifyButton reference={p.reference} />
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

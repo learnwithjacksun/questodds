@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { renderEmail } from "@/lib/email-template";
 import { sendEmail } from "@/lib/mail";
 import { ownerIds } from "@/lib/auth/roles";
+import { Payment } from "@/lib/models/payment";
 import { User } from "@/lib/models/user";
 import { formatNaira, VIP_DAYS } from "@/lib/plan";
 import { SITE_URL } from "@/lib/site";
@@ -57,13 +58,14 @@ async function notifyOwners(subject: string, heading: string, intro: string, not
 
 /**
  * Receipt for the person who paid. Best effort like the owner alerts: it never throws and never
- * affects the payment. Sent from markPaid, so it goes out once per payment.
+ * affects the payment. Sent from markPaid, so it goes out once per payment, and again by hand from
+ * the admin area. Returns whether the email was handed to the mail service.
  */
-export async function sendReceipt(p: { userId: string; reference: string; amount: number }) {
+export async function sendReceipt(p: { userId: string; reference: string; amount: number }): Promise<boolean> {
   try {
     await connectDB();
     const user = await User.findById(p.userId).select("username email").lean();
-    if (!user) return;
+    if (!user) return false;
 
     // The plan dates are a nicety: send the receipt even if the lookup fails.
     const sub = await getSubscription(p.userId).catch(() => null);
@@ -83,7 +85,7 @@ export async function sendReceipt(p: { userId: string; reference: string; amount
     const subject = `Your Quest Codes payment receipt (${formatNaira(p.amount)})`;
     if (!process.env.BREVO_API_KEY && process.env.NODE_ENV !== "production") {
       console.log(`[receipt] ${subject} -> ${user.email}`);
-      return;
+      return true;
     }
     await sendEmail({
       to: user.email,
@@ -96,8 +98,11 @@ export async function sendReceipt(p: { userId: string; reference: string; amount
         reason: "You received this email because you made a payment on Quest Codes.",
       }),
     });
+    await Payment.updateOne({ reference: p.reference }, { receiptSentAt: new Date() });
+    return true;
   } catch (err) {
     console.error("[receipt] couldn't email the receipt", err);
+    return false;
   }
 }
 
