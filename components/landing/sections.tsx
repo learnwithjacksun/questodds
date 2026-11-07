@@ -136,21 +136,3 @@ export function Faq() {
     </section>
   );
 }
-
-export function Footer() {
-  return (
-    <footer className="qo-footer">
-      <p className="qo-disclaimer">
-        <strong>Disclaimer:</strong> Quest Codes is an independent third-party platform and is not
-        affiliated with, associated with, endorsed by, or officially connected to SportyBet or any
-        of its subsidiaries or partners. SportyBet is a trademark of its respective owner; references
-        to SportyBet are for identification and compatibility purposes only.
-      </p>
-      <p className="qo-disclaimer">
-        Quest Codes never places bets or handles your betting funds. Gambling involves risk. Must be
-        of legal age in your jurisdiction. If gambling is a problem, seek help.
-      </p>
-      <p className="qo-copy">© 2026 Quest Codes. All rights reserved.</p>
-    </footer>
-  );
-}

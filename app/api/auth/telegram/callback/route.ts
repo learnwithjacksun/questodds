@@ -60,9 +60,10 @@ export async function GET(req: Request) {
     await connectDB();
 
     if (intent === "login") {
-      const user = await User.findOne({ telegramId: tg.id }).select("_id").lean();
+      const user = await User.findOne({ telegramId: tg.id }).select("_id status tokenVersion").lean();
       if (!user) return go("/login", "not_linked");
-      await createSession(String(user._id));
+      if (user.status === "suspended") return go("/login", "failed");
+      await createSession(String(user._id), user.tokenVersion ?? 0);
       return NextResponse.redirect(new URL("/dashboard", origin));
     }
 

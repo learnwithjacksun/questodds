@@ -13,6 +13,17 @@ const userSchema = new Schema(
     telegramUsername: { type: String },
     telegramPhotoUrl: { type: String },
     telegramLinkedAt: { type: Date },
+    // Admin area. Owners can also come from OWNER_TELEGRAM_IDS (see lib/auth/roles.ts).
+    role: { type: String, enum: ["user", "admin", "owner"], default: "user" },
+    // A suspended account can't sign in or use the API.
+    status: { type: String, enum: ["active", "suspended"], default: "active" },
+    suspendedReason: { type: String },
+    // Bumped to sign the user out everywhere: sessions carry the version they were issued under.
+    tokenVersion: { type: Number, default: 0 },
+    // Snapshot of the VIP end date from the last subscription lookup (the API can't list subscribers).
+    vipUntil: { type: Date },
+    // Private notes by admins, never shown to the user.
+    adminNote: { type: String, maxlength: 2000 },
   },
   { timestamps: true },
 );

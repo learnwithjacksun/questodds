@@ -4,7 +4,8 @@ import { Gallery } from "@/components/landing/gallery";
 import { Hero } from "@/components/landing/hero";
 import { Pricing } from "@/components/landing/pricing";
 import { Proof } from "@/components/landing/proof";
-import { Faq, Footer, HowItWorks, Services, TelegramSection } from "@/components/landing/sections";
+import { Faq, HowItWorks, Services, TelegramSection } from "@/components/landing/sections";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
   return (
@@ -20,7 +21,7 @@ export default function Home() {
       <Pricing />
       <TelegramSection />
       <Faq />
-      <Footer />
+      <SiteFooter />
     </main>
   );
 }

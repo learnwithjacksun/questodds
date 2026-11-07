@@ -12,8 +12,8 @@ function key() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSession(userId: string) {
-  const token = await new SignJWT({})
+export async function createSession(userId: string, tokenVersion = 0) {
+  const token = await new SignJWT({ tv: tokenVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
@@ -29,12 +29,15 @@ export async function createSession(userId: string) {
   });
 }
 
-export async function getSession(): Promise<{ userId: string } | null> {
+export async function getSession(): Promise<{ userId: string; tokenVersion: number } | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, key(), { algorithms: ["HS256"] });
-    return payload.sub ? { userId: payload.sub } : null;
+    // Admin tokens are signed with the same key; they must never work as a user session.
+    if (!payload.sub || payload.aud) return null;
+    // Sessions issued before versions existed have no `tv` and count as version 0.
+    return { userId: payload.sub, tokenVersion: typeof payload.tv === "number" ? payload.tv : 0 };
   } catch {
     return null;
   }

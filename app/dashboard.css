@@ -126,8 +126,6 @@
 .qo-fine, .qo-card .qo-fine { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 .qo-card .qo-fine strong { color: var(--text); font-weight: 600; }
 .qo-empty { margin: 0; padding: 28px 24px; color: var(--muted); font-size: 15px; }
-.qo-dash-footer { max-width: 1040px; width: 100%; margin: 0 auto; padding: 24px 24px 96px; border-top: 1px solid var(--border-soft); }
-.qo-dash-footer p { max-width: 820px; margin: 0 0 8px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
 
 /* ---------- Buttons ---------- */
 .qo-dash .qo-btn-primary { border: 0; cursor: pointer; }
@@ -382,7 +380,7 @@
   .qo-checkout .qo-btn-ghost { height: 40px; padding: 0 14px; }
   .qo-acct { font-size: 18px; }
   .qo-kv > span { width: 100%; }
-  .qo-dash-footer { padding: 24px 16px 88px; }
+  .qo-dnav .qo-logo-word { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .qo-spin, .qo-skel, .qo-loader-logo, .qo-loader-bar::after { animation: none; }

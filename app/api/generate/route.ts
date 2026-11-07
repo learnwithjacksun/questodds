@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { logGeneration } from "@/lib/admin/generation-log";
 import { guardApi, upstreamError } from "@/lib/api-guard";
 import { generateCodes } from "@/lib/sporty/client";
 import { generateRequestSchema } from "@/lib/sporty/schemas";
@@ -21,9 +22,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "A generation is already running for you" }, { status: 429 });
   }
   inFlight.add(user.id);
+  const started = Date.now();
   try {
-    return NextResponse.json(await generateCodes(parsed.data.sport, telegramId, parsed.data.fresh));
+    const result = await generateCodes(parsed.data.sport, telegramId, parsed.data.fresh);
+    const codes = "codes" in result && Array.isArray(result.codes) ? result.codes.length : 0;
+    after(() => logGeneration({ userId: user.id, service: parsed.data.sport, ok: true, codes, started }));
+    return NextResponse.json(result);
   } catch (err) {
+    after(() =>
+      logGeneration({
+        userId: user.id,
+        service: parsed.data.sport,
+        ok: false,
+        started,
+        error: err instanceof Error ? err.message.slice(0, 160) : "failed",
+      }),
+    );
     return upstreamError(err, "Couldn't generate codes. Try again.");
   } finally {
     inFlight.delete(user.id);

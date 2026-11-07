@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Payment } from "@/lib/models/payment";
 import { guardApi, upstreamError } from "@/lib/api-guard";
 import { getSubscription, verifyPayment } from "@/lib/sporty/client";
 import type { PaymentCheck } from "@/lib/sporty/schemas";
@@ -32,5 +34,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ referen
     message: payment.status === "fulfilled" ? payment.value.message : undefined,
     subscription: subscription.status === "fulfilled" ? subscription.value : null,
   };
+  if (body.status === "paid") {
+    after(async () => {
+      try {
+        await connectDB();
+        await Payment.updateOne(
+          { reference, status: { $ne: "paid" } },
+          { status: "paid", paidAt: new Date() },
+        );
+      } catch (err) {
+        console.error("[payment] couldn't mark paid", err);
+      }
+    });
+  }
   return NextResponse.json(body);
 }

@@ -10,6 +10,7 @@ import "./auth.css";
 import "./dashboard.css";
 import "./plan.css";
 import "./support.css";
+import "./admin.css";
 
 const geist = Geist({
   variable: "--font-geist-sans",

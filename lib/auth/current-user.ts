@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { effectiveRole, type Role } from "@/lib/auth/roles";
 
 export type CurrentUser = {
   id: string;
   username: string;
   email: string;
+  /** Only used to show the Admin link. The admin area itself re-checks everything. */
+  role: Role;
   ageConfirmedAt: Date;
   telegram: { id: string; username: string | null; photoUrl: string | null; linkedAt: Date | null } | null;
 };
@@ -21,11 +24,14 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   await connectDB();
   const doc = await User.findById(session.userId).lean();
   if (!doc) return null;
+  // Signed out everywhere (version bumped) or suspended: the session no longer counts.
+  if ((doc.tokenVersion ?? 0) !== session.tokenVersion || doc.status === "suspended") return null;
 
   return {
     id: String(doc._id),
     username: doc.username,
     email: doc.email,
+    role: effectiveRole(doc),
     ageConfirmedAt: doc.ageConfirmedAt,
     telegram: doc.telegramId
       ? {

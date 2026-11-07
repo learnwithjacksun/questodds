@@ -13,6 +13,7 @@ import {
   Home01Icon,
   Logout01Icon,
   Settings01Icon,
+  SecurityLockIcon,
 } from "@hugeicons/core-free-icons";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { LogoMark } from "@/components/brand/logo-mark";
@@ -25,7 +26,7 @@ const LINKS = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings01Icon },
 ];
 
-export function DashNav({ username }: { username: string }) {
+export function DashNav({ username, isStaff = false }: { username: string; isStaff?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -47,6 +48,10 @@ export function DashNav({ username }: { username: string }) {
     };
   }, [open]);
 
+  const links = isStaff
+    ? [...LINKS, { href: "/admin", label: "Admin", icon: SecurityLockIcon, exact: false }]
+    : LINKS;
+
   const isActive = (l: (typeof LINKS)[number]) =>
     l.exact ? pathname === l.href : pathname.startsWith(l.href);
 
@@ -55,11 +60,11 @@ export function DashNav({ username }: { username: string }) {
       <header className={`qo-dnav${scrolled && !open ? " is-scrolled" : ""}`}>
         <Link href="/dashboard" className="qo-logo" aria-label="Quest Codes dashboard">
           <LogoMark />
-          Quest Codes
+          <span className="qo-logo-word">Quest Codes</span>
         </Link>
 
         <nav className="qo-dnav-links" aria-label="Dashboard">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link key={l.href} href={l.href} className={isActive(l) ? "is-active" : undefined}>
               <HugeiconsIcon icon={l.icon} size={16} aria-hidden="true" />
               {l.label}
@@ -91,7 +96,7 @@ export function DashNav({ username }: { username: string }) {
 
       <div id="qo-dash-drawer" className={`qo-drawer${open ? " is-open" : ""}`} aria-hidden={!open}>
         <nav className="qo-drawer-links">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}

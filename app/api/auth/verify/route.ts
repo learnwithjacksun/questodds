@@ -55,7 +55,14 @@ export async function POST(req: Request) {
       await user.save();
     }
 
-    await createSession(user.id);
+    if (user.status === "suspended") {
+      return NextResponse.json(
+        { error: "This account is suspended. Contact support on WhatsApp." },
+        { status: 403 },
+      );
+    }
+
+    await createSession(user.id, user.tokenVersion ?? 0);
     return NextResponse.json({ ok: true, username: user.username });
   } catch (err) {
     console.error("[auth] verify failed", err);
