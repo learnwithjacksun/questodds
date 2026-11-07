@@ -21,7 +21,7 @@ const STEPS: (Item & { n: string })[] = [
 ];
 
 const SERVICES: Item[] = [
-  { icon: FootballIcon, title: "Football", body: "Upcoming fixtures scanned within a configurable odds band, ranked and grouped into booking codes." },
+  { icon: FootballIcon, title: "Football", body: "Upcoming fixtures sorted into booking codes, from steady picks to big odds." },
   { icon: GameController01Icon, title: "eFootball", body: "Live eFootball matches filtered by score and minute." },
   { icon: ComputerIcon, title: "vFootball", body: "Live virtual football matches filtered by score and minute." },
 ];

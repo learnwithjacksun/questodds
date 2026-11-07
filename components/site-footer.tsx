@@ -52,7 +52,7 @@ export function SiteFooter({ className = "" }: { className?: string }) {
             <LogoMark />
             Quest Codes
           </Link>
-          <p>SportyBet booking codes on the web or in Telegram, with a live Quest Special scanner.</p>
+          <p>SportyBet booking codes on the web or in Telegram.</p>
         </div>
 
         <nav className="qo-sitefoot-cols" aria-label="Footer">

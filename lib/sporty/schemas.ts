@@ -55,8 +55,8 @@ export const telegramUserSchema = z.object({
 export type TelegramUser = z.infer<typeof telegramUserSchema>;
 
 /* ---------- Code generation ---------- */
-/** Football slips come in up to three tiers. An unknown tier from a newer API is treated as none. */
-export const TIERS = ["banker", "safe", "long"] as const;
+/** Football slips come in up to four tiers. An unknown tier from a newer API is treated as none. */
+export const TIERS = ["rookie", "hustler", "high_roller", "legend"] as const;
 export const tierSchema = z.enum(TIERS);
 export type Tier = z.infer<typeof tierSchema>;
 
@@ -68,14 +68,18 @@ export const sportyCodeSchema = z.object({
   sport: z.string(),
   /** Football only. */
   tier: tierSchema.optional().catch(undefined),
-  /** Football only: estimated chance (0-1) that every leg wins. */
+  tierName: z.string().optional(),
+  /** Football only: estimated chance (0-1). Internal use only, never shown to users. */
   jointProb: z.number().optional(),
+  /** High Roller and Legend only. */
+  highRisk: z.boolean().optional(),
 });
 export type SportyCode = z.infer<typeof sportyCodeSchema>;
 
 /** Why a football tier produced no slip. */
 export const noSafeSlipTierSchema = z.object({
   tier: tierSchema,
+  tierName: z.string().optional(),
   reasons: z.array(z.string()).default([]),
   refreshDropped: z.array(z.string()).default([]),
 });
@@ -87,7 +91,7 @@ const generatedSchema = z.object({
   count: z.number(),
   cached: z.boolean().optional(),
   codes: z.array(sportyCodeSchema),
-  /** Football: "<TIER>: no safe slip right now (...)" for each missing tier. */
+  /** Football: an entry per missing tier. Not shown to users. */
   lines: z.array(z.string()).optional(),
   noSafeSlip: z.array(noSafeSlipTierSchema).optional(),
   generatedAt: z.string().optional(),

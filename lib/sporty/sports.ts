@@ -10,8 +10,8 @@ import type { Sport } from "@/lib/sporty/schemas";
 export const SPORT_META: Record<Sport, { name: string; blurb: string; note: string; icon: IconSvgElement }> = {
   football: {
     name: "Football",
-    blurb: "Upcoming fixtures scanned and sorted into up to three tiers: Banker, Safe and Long.",
-    note: "Odds move and codes expire. Open the code on SportyBet to check current prices.",
+    blurb: "Upcoming fixtures sorted into up to four tiers, from Rookie to Legend.",
+    note: "Odds move and codes expire. Check current prices on SportyBet.",
     icon: FootballIcon,
   },
   efootball: {
@@ -32,8 +32,8 @@ export const SPORT_META: Record<Sport, { name: string; blurb: string; note: stri
 export const QUEST_SPECIAL = {
   id: "quest_special",
   name: "Quest Special",
-  blurb: "Live vFootball scanner that mints a booking code only when a match clears its safety rules.",
-  note: "Virtual football results are random. A matching rule doesn't make a code safe.",
+  blurb: "Scans live virtual matches and gives you a code when one is ready. No code means nothing safe turned up, and it isn't counted.",
+  note: "Virtual football results are random.",
   icon: Target01Icon,
 } as const;
 

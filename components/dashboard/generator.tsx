@@ -26,13 +26,18 @@ const OPTIONS: { id: Service; name: string; icon: IconSvgElement }[] = [
   { id: QUEST_SPECIAL.id, name: QUEST_SPECIAL.name, icon: QUEST_SPECIAL.icon },
 ];
 
-/** A fresh football run can take 30-90 seconds, so the browser waits well past that. */
-const GENERATE_TIMEOUT_MS = 180_000;
-/** After a "busy" reply, hold the button for a moment instead of letting people hammer retry. */
-const BUSY_RETRY_SECONDS = 10;
+/** A fresh football run can take 1-3 minutes, so the browser waits past that. */
+const GENERATE_TIMEOUT_MS = 200_000;
+/** After a "busy" reply, wait, then retry a few times before giving up. */
+const BUSY_RETRY_MS = 10_000;
+const BUSY_MAX_RETRIES = 3;
+
+const FOOTBALL_STEPS = ["Analysing today's matches…", "Checking the latest odds…", "Building your slips…"];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function progressMessage(seconds: number, sport: Sport): string {
-  if (sport === "football") return "Analysing today's matches. This can take up to 2 minutes.";
+  if (sport === "football") return FOOTBALL_STEPS[Math.floor(seconds / 6) % FOOTBALL_STEPS.length];
   if (seconds < 10) return "Scanning fixtures…";
   if (seconds < 45) return "Ranking legs and minting codes. This can take a minute or more.";
   return "Still working. The service may be waking up or waiting out SportyBet's rate limit.";
@@ -52,29 +57,34 @@ export function Generator({ initialService }: { initialService: Service }) {
   const [results, setResults] = useState<Results>({});
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
-  // Seconds left before another try is allowed after "another generation is running".
-  const [busyWait, setBusyWait] = useState(0);
+  // True while waiting to retry after "another generation is running".
+  const [waiting, setWaiting] = useState(false);
 
   const generate = useMutation({
-    mutationFn: (req: GenerateRequest) =>
-      postJson<GenerateResult>("/api/generate", req, { timeoutMs: GENERATE_TIMEOUT_MS }),
-    onMutate: () => {
-      setStartedAt(Date.now());
-      setBusyWait(0);
+    mutationFn: async (req: GenerateRequest) => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return await postJson<GenerateResult>("/api/generate", req, { timeoutMs: GENERATE_TIMEOUT_MS });
+        } catch (err) {
+          const isBusy = err instanceof HttpError && err.status === 429;
+          if (!isBusy || attempt >= BUSY_MAX_RETRIES) {
+            if (isBusy) throw new Error("Still busy. Please try again in a minute.");
+            throw err;
+          }
+          setWaiting(true);
+          await sleep(BUSY_RETRY_MS);
+          setWaiting(false);
+        }
+      }
     },
+    onMutate: () => setStartedAt(Date.now()),
     onSuccess: (data, req) => setResults((r) => ({ ...r, [req.sport]: data })),
-    onError: (err: Error) => {
-      if (err instanceof HttpError && err.status === 429) setBusyWait(BUSY_RETRY_SECONDS);
-      else toast.error(err.message);
+    onError: (err: Error) => toast.error(err.message),
+    onSettled: () => {
+      setWaiting(false);
+      setStartedAt(null);
     },
-    onSettled: () => setStartedAt(null),
   });
-
-  useEffect(() => {
-    if (busyWait <= 0) return;
-    const id = setTimeout(() => setBusyWait((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [busyWait]);
 
   useEffect(() => {
     if (startedAt === null) return;
@@ -132,7 +142,7 @@ export function Generator({ initialService }: { initialService: Service }) {
         <button
           type="button"
           className="qo-btn-primary qo-gen-btn"
-          disabled={busy || busyWait > 0}
+          disabled={busy}
           onClick={() => generate.mutate({ sport })}
         >
           {busy ? (
@@ -140,20 +150,16 @@ export function Generator({ initialService }: { initialService: Service }) {
               <HugeiconsIcon icon={Loading03Icon} size={18} className="qo-spin" aria-hidden="true" />
               Generating… {elapsed}s
             </>
-          ) : busyWait > 0 ? (
-            `Try again in ${busyWait}s`
           ) : (
             `Generate ${meta.name} codes`
           )}
         </button>
         {busy && (
           <p className="qo-progress-note" role="status">
-            {progressMessage(elapsed, sport)}
-          </p>
-        )}
-        {!busy && busyWait > 0 && (
-          <p className="qo-progress-note" role="status">
-            Another generation is already running for you. Give it a moment, then try again.
+            {waiting
+              ? "Another generation is running. Retrying shortly…"
+              : progressMessage(elapsed, sport)}
+            {sport === "football" && !waiting && " This can take up to 3 minutes."}
           </p>
         )}
       </div>
@@ -180,7 +186,7 @@ export function Generator({ initialService }: { initialService: Service }) {
                 )}
               </div>
               {tiered ? (
-                <FootballTiers codes={result.codes} lines={result.lines} noSafeSlip={result.noSafeSlip} />
+                <FootballTiers codes={result.codes} />
               ) : (
                 result.codes.map((c) => (
                   <article className="qo-code-card" key={c.code}>
@@ -203,7 +209,7 @@ export function Generator({ initialService }: { initialService: Service }) {
               )}
             </>
           ) : result.noSafeSlip ? (
-            <NoSafeSlip message={result.message} noSafeSlip={result.noSafeSlip} />
+            <NoSafeSlip message={result.message} />
           ) : (
             <div className="qo-card qo-notice" role="status">
               <HugeiconsIcon icon={InformationCircleIcon} size={20} aria-hidden="true" />
@@ -216,7 +222,7 @@ export function Generator({ initialService }: { initialService: Service }) {
         </section>
       )}
 
-      <p className="qo-fine">{meta.note} Codes are suggestions, not guarantees. Bet responsibly.</p>
+      <p className="qo-fine">{meta.note} Bet responsibly.</p>
         </>
       )}
     </div>

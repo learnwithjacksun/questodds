@@ -16,7 +16,6 @@ import { getJson, postJson } from "@/lib/http";
 import {
   isQuestSignal,
   type QuestLeg,
-  type QuestMode,
   type QuestSpecialStart,
   type QuestSpecialStatus,
 } from "@/lib/sporty/schemas";
@@ -25,43 +24,17 @@ import { QUEST_SPECIAL } from "@/lib/sporty/sports";
 const STATUS_KEY = ["quest-special-status"] as const;
 const POLL_MS = 4000;
 
-const MODES: { id: QuestMode; label: string; hint: string }[] = [
-  { id: "any", label: "Mixed", hint: "Handicap first, with safer fallbacks" },
-  { id: "handicap", label: "Handicap", hint: "Handicap and double chance only" },
-  { id: "ou", label: "Under", hint: "Under lines only" },
-];
 const LEG_OPTIONS = [1, 2, 3, 5] as const;
 
 type TimedOut = Extract<NonNullable<QuestSpecialStatus["lastResult"]>, { timedOut: true }>;
 
-const percent = (value: number | undefined) => (value === undefined ? null : `${Math.round(value * 100)}%`);
-
-/** Plain-language explanation of why a scan ended without a slip. */
+/** A scan that ends without a slip is a normal outcome. Nothing about why is shown. */
 function NoSafeSlipNote({ result }: { result: TimedOut }) {
-  const info = result.noSafeSlip;
   const when = formatWhen(new Date(result.timestamp).toISOString());
   return (
     <div className="qo-card qo-notice" role="status" style={{ marginTop: 24 }}>
       <HugeiconsIcon icon={InformationCircleIcon} size={20} aria-hidden="true" />
-      <div>
-        <p>
-          No safe slip this round ({when}). Quest Codes doesn&apos;t lower its safety bar, so no code was
-          minted.
-        </p>
-        {info ? (
-          <p className="qo-fine">
-            {info.reasons.length > 0 && <>{info.reasons.join(". ")}. </>}
-            {info.inWindow !== undefined && <>{info.inWindow} legs were inside the time window</>}
-            {info.considered !== undefined && <>, {info.considered} passed the filters</>}
-            {info.inWindow !== undefined && "."}
-          </p>
-        ) : (
-          <p className="qo-fine">
-            No match reached a scan window (around minutes 40–43 and 80–86) while this ran. Try again
-            in a few minutes.
-          </p>
-        )}
-      </div>
+      <p>No code this round ({when}). Try again in a few minutes.</p>
     </div>
   );
 }
@@ -69,7 +42,6 @@ function NoSafeSlipNote({ result }: { result: TimedOut }) {
 function LegRow({ leg }: { leg: QuestLeg }) {
   const description = leg.description ?? leg.analysis?.description;
   const odds = leg.odds ?? leg.analysis?.odds;
-  const prob = percent(leg.prob);
   return (
     <li className="qo-qs-leg">
       <span className="qo-code-label">
@@ -79,8 +51,6 @@ function LegRow({ leg }: { leg: QuestLeg }) {
       <span className="qo-code-meta">
         {description}
         {odds !== undefined && ` · ${formatOdds(odds)} odds`}
-        {prob && ` · ${prob} chance`}
-        {leg.safetyScore !== undefined && ` · safety ${leg.safetyScore}/100`}
       </span>
     </li>
   );
@@ -88,7 +58,6 @@ function LegRow({ leg }: { leg: QuestLeg }) {
 
 export function QuestSpecial() {
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState<QuestMode>("any");
   const [legs, setLegs] = useState<number>(1);
 
   // The server is the source of truth, so a page refresh mid-scan picks the session back up.
@@ -102,7 +71,7 @@ export function QuestSpecial() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: STATUS_KEY });
 
   const start = useMutation({
-    mutationFn: () => postJson<QuestSpecialStart>("/api/quest-special/start", { mode, legs }),
+    mutationFn: () => postJson<QuestSpecialStart>("/api/quest-special/start", { mode: "any", legs }),
     onSuccess: () => refresh(),
     onError: (err: Error) => toast.error(err.message),
   });
@@ -146,11 +115,7 @@ export function QuestSpecial() {
           <span className="qo-badge is-pending">{unlimited ? "Unlimited" : `${used}/${max} today`}</span>
         </div>
         <h3>{QUEST_SPECIAL.name}</h3>
-        <p>
-          Scans live vFootball rounds for up to 10 minutes and mints a booking code only when a match
-          clears its safety rules, using half-time markets around the 40th minute and full-time markets
-          around the 80th. If nothing is safe you get no code, and that scan isn&apos;t counted.
-        </p>
+        <p>{QUEST_SPECIAL.blurb}</p>
 
         {active ? (
           <>
@@ -173,24 +138,6 @@ export function QuestSpecial() {
         ) : (
           <>
             <fieldset className="qo-qs-opts">
-              <legend>Style</legend>
-              <div role="radiogroup" aria-label="Selection style">
-                {MODES.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === m.id}
-                    title={m.hint}
-                    className="qo-qs-opt"
-                    onClick={() => setMode(m.id)}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-            <fieldset className="qo-qs-opts">
               <legend>Legs</legend>
               <div role="radiogroup" aria-label="Number of legs">
                 {LEG_OPTIONS.map((n) => (
@@ -207,12 +154,6 @@ export function QuestSpecial() {
                 ))}
               </div>
             </fieldset>
-            {legs >= 5 && (
-              <p className="qo-fine">
-                Five-leg slips rarely clear the safety bar, so &ldquo;no safe slip&rdquo; is the usual
-                result. That&apos;s intentional.
-              </p>
-            )}
             <button
               type="button"
               className="qo-btn-primary qo-gen-btn"
@@ -263,11 +204,9 @@ export function QuestSpecial() {
               ) : (
                 <strong className="qo-code-value qo-code-missing">No code minted</strong>
               )}
-              <span className="qo-code-meta">
-                {last.isMultiLeg && last.totalOdds !== undefined && `${formatOdds(last.totalOdds)} total odds`}
-                {last.isMultiLeg && last.totalOdds !== undefined && last.jointProb !== undefined && " · "}
-                {last.jointProb !== undefined && `${percent(last.jointProb)} combined chance, never guaranteed`}
-              </span>
+              {last.isMultiLeg && last.totalOdds !== undefined && (
+                <span className="qo-code-meta">{formatOdds(last.totalOdds)} total odds</span>
+              )}
             </div>
             {last.code && (
               <div className="qo-code-actions">
@@ -287,8 +226,7 @@ export function QuestSpecial() {
       {!active && last && !isQuestSignal(last) && <NoSafeSlipNote result={last} />}
 
       <p className="qo-fine">
-        {QUEST_SPECIAL.note} Codes are suggestions, not guarantees. Codes expire quickly, so use them
-        straight away. Bet responsibly.
+        {QUEST_SPECIAL.note} Bet responsibly.
       </p>
     </div>
   );
