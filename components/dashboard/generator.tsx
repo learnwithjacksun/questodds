@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
@@ -59,6 +60,7 @@ export function Generator({ initialService }: { initialService: Service }) {
   const [now, setNow] = useState(0);
   // True while waiting to retry after "another generation is running".
   const [waiting, setWaiting] = useState(false);
+  const [needsSubscription, setNeedsSubscription] = useState(false);
 
   const generate = useMutation({
     mutationFn: async (req: GenerateRequest) => {
@@ -77,9 +79,19 @@ export function Generator({ initialService }: { initialService: Service }) {
         }
       }
     },
-    onMutate: () => setStartedAt(Date.now()),
+    onMutate: () => {
+      setStartedAt(Date.now());
+      setNeedsSubscription(false);
+    },
     onSuccess: (data, req) => setResults((r) => ({ ...r, [req.sport]: data })),
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      // No active subscription: send them to pay instead of showing a raw error.
+      if (err instanceof HttpError && err.status === 403 && err.data.code === "subscription_required") {
+        setNeedsSubscription(true);
+      } else {
+        toast.error(err.message);
+      }
+    },
     onSettled: () => {
       setWaiting(false);
       setStartedAt(null);
@@ -163,6 +175,18 @@ export function Generator({ initialService }: { initialService: Service }) {
           </p>
         )}
       </div>
+
+      {needsSubscription && !busy && (
+        <div className="qo-card qo-notice" role="status">
+          <HugeiconsIcon icon={InformationCircleIcon} size={20} aria-hidden="true" />
+          <p>
+            A VIP subscription is required to generate codes.{" "}
+            <Link href="/dashboard/upgrade" className="qo-admin-link">
+              Upgrade to VIP
+            </Link>
+          </p>
+        </div>
+      )}
 
       {result && !busy && (
         <section aria-live="polite" className="qo-results">

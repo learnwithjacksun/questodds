@@ -17,14 +17,14 @@ export async function POST(req: Request) {
   const parsed = generateRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Choose a service" }, { status: 400 });
 
-  const { user, telegramId } = guard;
+  const { user, apiUserId } = guard;
   if (inFlight.has(user.id)) {
     return NextResponse.json({ error: "A generation is already running for you" }, { status: 429 });
   }
   inFlight.add(user.id);
   const started = Date.now();
   try {
-    const result = await generateCodes(parsed.data.sport, telegramId, parsed.data.fresh);
+    const result = await generateCodes(parsed.data.sport, apiUserId, parsed.data.fresh);
     const codes = "codes" in result && Array.isArray(result.codes) ? result.codes.length : 0;
     after(() => logGeneration({ userId: user.id, service: parsed.data.sport, ok: true, codes, started }));
     return NextResponse.json(result);

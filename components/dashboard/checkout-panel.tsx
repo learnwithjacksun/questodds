@@ -20,6 +20,9 @@ export type CheckoutPanelProps = {
   /** Live status line under the buttons. */
   status: string;
   onPaid: () => void;
+  /** Automatic checking ran out: offer a manual "Check again". */
+  showCheckAgain?: boolean;
+  onCheckAgain?: () => void;
   onNewPayment: () => void;
   newPaymentPending: boolean;
 };
@@ -111,6 +114,11 @@ export function CheckoutPanel(p: CheckoutPanelProps) {
             "I've paid"
           )}
         </button>
+        {p.showCheckAgain && (
+          <button type="button" className="qo-btn-ghost" onClick={p.onCheckAgain}>
+            Check again
+          </button>
+        )}
         {(p.lapsed || !p.account) && (
           <button type="button" className="qo-btn-ghost" disabled={p.newPaymentPending} onClick={p.onNewPayment}>
             {p.newPaymentPending ? "Preparing…" : "Start a new payment"}

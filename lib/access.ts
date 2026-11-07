@@ -4,12 +4,13 @@ import { after } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import type { CurrentUser } from "@/lib/auth/current-user";
+import { getApiUserId } from "@/lib/api-user";
 import { getSubscription } from "@/lib/sporty/client";
 
 export type Access = {
-  /** Telegram account linked to this user. */
+  /** A Telegram account is linked. Optional: it is never required to pay or use the site. */
   linked: boolean;
-  /** Linked and allowed to generate codes (active VIP, or admin). */
+  /** Allowed to generate codes (active VIP, or admin). */
   allowed: boolean;
   isAdmin: boolean;
   daysLeft: number | string;
@@ -20,7 +21,7 @@ export type Access = {
   unavailable: boolean;
 };
 
-const NOT_LINKED: Access = {
+const NONE: Access = {
   linked: false,
   allowed: false,
   isAdmin: false,
@@ -30,11 +31,11 @@ const NOT_LINKED: Access = {
   unavailable: false,
 };
 
-const lookup = cache(async (telegramId: string): Promise<Access> => {
+const lookup = cache(async (id: string): Promise<Access> => {
   try {
-    const sub = await getSubscription(telegramId);
+    const sub = await getSubscription(id);
     return {
-      linked: true,
+      linked: false,
       allowed: sub.active || sub.isAdmin,
       isAdmin: sub.isAdmin,
       daysLeft: sub.daysLeft,
@@ -44,16 +45,27 @@ const lookup = cache(async (telegramId: string): Promise<Access> => {
     };
   } catch (err) {
     console.error("[access] subscription lookup failed", err);
-    return { ...NOT_LINKED, linked: true, unavailable: true };
+    return { ...NONE, unavailable: true };
   }
 });
 
-/** The single seam deciding who may generate codes. */
+/**
+ * The single seam deciding who may generate codes. Looks the account up by its _id, which the
+ * service resolves to the same subscriber as the email and any linked Telegram ID. A linked
+ * account that isn't active under its _id is also checked under its Telegram ID, so a plan bought in
+ * the bot is never missed.
+ */
 export async function getAccess(user: Pick<CurrentUser, "id" | "telegram">): Promise<Access> {
-  if (!user.telegram) return NOT_LINKED;
-  const access = await lookup(user.telegram.id);
+  const primary = await lookup(getApiUserId(user));
+  let access = primary;
+
+  if (!primary.allowed && user.telegram) {
+    const viaTelegram = await lookup(user.telegram.id);
+    if (viaTelegram.allowed || (primary.unavailable && !viaTelegram.unavailable)) access = viaTelegram;
+  }
+
   if (!access.unavailable && access.expiresAt) snapshotVip(user.id, access.expiresAt);
-  return access;
+  return { ...access, linked: !!user.telegram };
 }
 
 /**

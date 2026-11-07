@@ -6,7 +6,8 @@ const paymentSchema = new Schema(
   {
     reference: { type: String, required: true, unique: true },
     userId: { type: String, required: true, index: true },
-    telegramId: { type: String, required: true },
+    /** Only when the account had Telegram linked at checkout. */
+    telegramId: { type: String },
     /** Price we expect (plan price) and what the payment provider actually quoted. */
     expectedAmount: { type: Number, required: true },
     quotedAmount: { type: Number },

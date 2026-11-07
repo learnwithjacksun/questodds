@@ -8,12 +8,15 @@ type Flash = { kind: "success" | "error" | "info"; text: string };
 
 /** Fixed messages keyed by code, so the URL can never inject arbitrary text. */
 const MESSAGES: Record<string, Flash> = {
-  linked: { kind: "success", text: "Telegram linked." },
+  linked: { kind: "success", text: "Linked! Your subscription now works on the website and in the Telegram bot." },
   denied: { kind: "info", text: "Telegram sign-in was cancelled." },
   failed: { kind: "error", text: "Telegram couldn't be verified. Try again." },
   unavailable: { kind: "error", text: "The Telegram service is unavailable. Try again in a minute." },
   expired: { kind: "error", text: "That Telegram sign-in expired. Please try again." },
-  taken: { kind: "error", text: "That Telegram account is already linked to another Quest Codes account." },
+  taken: {
+    kind: "error",
+    text: "That Telegram account is already linked to a different Quest Codes account, so we didn't link it. Contact support if this is yours.",
+  },
   not_linked: {
     kind: "error",
     text: "No account is linked to this Telegram. Sign in with email, then link it in Settings.",

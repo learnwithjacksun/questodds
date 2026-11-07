@@ -42,6 +42,17 @@ export const subscriptionResponseSchema = z.object({
   subscription: subscriptionSchema,
 });
 
+/** What our own GET /api/subscription returns for the signed-in user. */
+export type SubscriptionStatus = {
+  active: boolean;
+  isAdmin: boolean;
+  daysLeft: number | string;
+  expDate: string | null;
+  expiresAt: number | null;
+  /** The service couldn't be reached, so `active` is unknown rather than false. */
+  unavailable: boolean;
+};
+
 /* ---------- Telegram ---------- */
 export const telegramUserSchema = z.object({
   id: z.string(),

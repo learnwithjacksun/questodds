@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { getSubscription } from "@/lib/sporty/client";
 import {
   appOrigin,
   exchangeTelegramCode,
@@ -81,6 +82,9 @@ export async function GET(req: Request) {
         telegramLinkedAt: new Date(),
       },
     );
+    // Scenario E: one lookup by the Telegram ID makes the service copy any existing web
+    // subscription to it, so the bot recognises the user right away. Best effort: linking succeeded.
+    await getSubscription(tg.id).catch((err) => console.error("[telegram] post-link sync failed", err));
     return go(home, "linked");
   } catch (err) {
     if ((err as { code?: number }).code === 11000) return go(home, "taken");

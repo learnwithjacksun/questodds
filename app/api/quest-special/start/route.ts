@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
   try {
     return NextResponse.json(
-      await startQuestSpecial(guard.telegramId, options.success ? options.data : { mode: "any", legs: 1 }),
+      await startQuestSpecial(guard.apiUserId,options.success ? options.data : { mode: "any", legs: 1 }),
     );
   } catch (err) {
     return upstreamError(err, "Couldn't start Quest Special. Try again.");

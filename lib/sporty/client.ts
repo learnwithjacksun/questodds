@@ -39,6 +39,8 @@ export class SportyApiError extends Error {
   constructor(
     message: string,
     readonly status?: number,
+    /** Machine-readable reason from the service, e.g. "subscription_required". */
+    readonly code?: string,
   ) {
     super(message);
     this.name = "SportyApiError";
@@ -76,7 +78,11 @@ async function request<S extends z.ZodType>(
       json && typeof json === "object" && "error" in json && typeof json.error === "string"
         ? json.error
         : "The code service returned an error.";
-    throw new SportyApiError(message, res.status);
+    const code =
+      json && typeof json === "object" && "code" in json && typeof json.code === "string"
+        ? json.code
+        : undefined;
+    throw new SportyApiError(message, res.status, code);
   }
 
   const parsed = schema.safeParse(json);
@@ -90,9 +96,10 @@ async function request<S extends z.ZodType>(
 /* ---------- Subscription ---------- */
 // Telegram identity is verified locally in lib/telegram.ts, never through this API.
 
-export async function getSubscription(telegramId: string): Promise<Subscription> {
+/** Read-only and safe to poll. Accepts any id linked to the account (see lib/api-user.ts). */
+export async function getSubscription(id: string): Promise<Subscription> {
   const res = await request(
-    `/api/subscription/${encodeURIComponent(telegramId)}`,
+    `/api/subscription/${encodeURIComponent(id)}`,
     subscriptionResponseSchema,
     { timeoutMs: 8_000 },
   );
@@ -151,10 +158,20 @@ export async function getLatestSlips(): Promise<LatestSlip[]> {
 
 /* ---------- Payments ---------- */
 
-export async function initializePayment(telegramId: string, email?: string): Promise<Checkout> {
+/**
+ * `userId` is the account's _id and `email` its real lowercase email. `telegramId` is sent only
+ * when Telegram is linked (that user then also gets the bot's "Payment confirmed" message).
+ */
+export async function initializePayment(input: {
+  userId: string;
+  email: string;
+  telegramId?: string;
+}): Promise<Checkout> {
+  const body: Record<string, string> = { userId: input.userId, email: input.email.toLowerCase() };
+  if (input.telegramId) body.telegramId = input.telegramId;
   const res = await request("/api/payment/initialize", checkoutSchema, {
     method: "POST",
-    body: { telegramId, email },
+    body,
     timeoutMs: WRITE_TIMEOUT_MS,
   });
   if (!res.success) throw new SportyApiError(res.error ?? "Couldn't start the payment.");

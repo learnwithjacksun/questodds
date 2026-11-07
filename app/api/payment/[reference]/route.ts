@@ -6,23 +6,27 @@ import { getSubscription, verifyPayment } from "@/lib/sporty/client";
 import type { PaymentCheck } from "@/lib/sporty/schemas";
 
 /**
- * Check a payment. Returns the checkout status AND the live subscription: the external API only
- * remembers a checkout session for a while, but a transfer credited through its webhook always
- * shows up in the subscription, so the UI can rely on either.
+ * "I've paid": checks one payment once and returns the live subscription with it. The page polls
+ * /api/subscription instead, so this is only called when the user taps the button. The service
+ * credits each reference exactly once, so repeated taps never extend the plan twice.
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ reference: string }> }) {
   const guard = await guardApi({ vip: false });
   if (!guard.ok) return guard.response;
 
   const { reference } = await params;
-  // References look like VIP-<telegramId>-<timestamp>; only allow checking your own.
-  if (!reference.startsWith(`VIP-${guard.telegramId}-`)) {
+  // References look like VIP-<id>-<timestamp>, where <id> is the account _id or its linked Telegram ID.
+  // Only allow checking your own.
+  const owned = [guard.apiUserId, guard.telegramId]
+    .filter((id): id is string => !!id)
+    .some((id) => reference.startsWith(`VIP-${id}-`));
+  if (!owned) {
     return NextResponse.json({ error: "Unknown payment reference" }, { status: 404 });
   }
 
   const [payment, subscription] = await Promise.allSettled([
     verifyPayment(reference),
-    getSubscription(guard.telegramId),
+    getSubscription(guard.apiUserId),
   ]);
 
   if (payment.status === "rejected" && subscription.status === "rejected") {

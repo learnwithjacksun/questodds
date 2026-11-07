@@ -10,10 +10,19 @@ import { CheckoutPanel } from "@/components/dashboard/checkout-panel";
 import { HowPaying, PlanCard } from "@/components/dashboard/plan-card";
 import { getJson, postJson } from "@/lib/http";
 import { VIP_PRICE_LABEL, VIP_PRICE_NGN } from "@/lib/plan";
-import { checkoutSchema, type Checkout, type PaymentCheck } from "@/lib/sporty/schemas";
+import {
+  checkoutSchema,
+  type Checkout,
+  type PaymentCheck,
+  type SubscriptionStatus,
+} from "@/lib/sporty/schemas";
 
-const POLL_MS = 5000;
-const MAX_POLLS = 180; // ~15 minutes of automatic checking
+const POLL_MS = 4000;
+const MAX_POLLS = 150; // 10 minutes at 4 seconds
+/** After the 10 minutes, keep checking slowly so a late transfer still unlocks by itself. */
+const SLOW_POLL_MS = 30_000;
+/** "I've paid" can't be tapped again for a few seconds. */
+const TAP_COOLDOWN_MS = 5000;
 
 /* ---------- Keep the checkout across refreshes ----------
  * A user who has already transferred must not lose the account/reference by reloading, and
@@ -81,6 +90,9 @@ export function Upgrade({
   const account = checkout?.virtualAccount;
 
   const [manualTried, setManualTried] = useState(false);
+  // Bumping this starts a fresh round of automatic checks ("Check again").
+  const [round, setRound] = useState(0);
+  const [coolingDown, setCoolingDown] = useState(false);
 
   // The transfer account is single-use and expires; stop polling it and offer a fresh one.
   const expiresAtMs = account?.expiresAt ? Date.parse(account.expiresAt) : NaN;
@@ -107,29 +119,43 @@ export function Upgrade({
     onError: (err: Error) => toast.error(err.message),
   });
 
-  // Checks run on their own every few seconds; "I've paid" just forces one right now.
-  const verify = useQuery({
-    queryKey: ["payment", reference],
-    queryFn: () => getJson<PaymentCheck>(`/api/payment/${encodeURIComponent(reference ?? "")}`),
-    enabled: !!reference && !stored?.paid && !lapsed,
+  const paid = !!stored?.paid;
+
+  // Automatic checks read the subscription (read-only, safe to poll). They never call the payment
+  // check, so there is no tight verify loop.
+  const watch = useQuery({
+    queryKey: ["subscription", reference, round],
+    queryFn: () => getJson<SubscriptionStatus>("/api/subscription"),
+    enabled: !!reference && !paid,
     retry: false,
     refetchOnWindowFocus: true,
-    refetchInterval: (q) => (q.state.dataUpdateCount >= MAX_POLLS ? false : POLL_MS),
+    refetchInterval: (q) => (q.state.dataUpdateCount >= MAX_POLLS ? SLOW_POLL_MS : POLL_MS),
   });
 
-  // Confirmed either by the checkout itself, or by the subscription extending (e.g. webhook credit).
-  const sub = verify.data?.subscription;
-  const renewed = !!sub?.active && (sub.expiresAt ?? 0) > (baselineExpiresAt ?? 0);
+  // "I've paid": one payment check per tap. The service credits each reference once, so repeats are harmless.
+  const verify = useMutation({
+    mutationFn: () => getJson<PaymentCheck>(`/api/payment/${encodeURIComponent(reference ?? "")}`),
+    onSettled: () => {
+      setCoolingDown(true);
+      setTimeout(() => setCoolingDown(false), TAP_COOLDOWN_MS);
+    },
+  });
+
+  // Confirmed by the subscription becoming active (or extending, for a renewal) or by the payment check.
+  const sub = verify.data?.subscription ?? watch.data;
+  const activeNow = !!sub && ("unavailable" in sub ? !sub.unavailable : true) && sub.active;
+  const renewed = activeNow && (sub?.expiresAt ?? 0) > (baselineExpiresAt ?? 0);
   const confirmed = verify.data?.status === "paid" || renewed;
-  const paid = !!stored?.paid;
 
   useEffect(() => {
     if (confirmed && checkout && !paid) {
       writeStored({ checkout, paid: true });
       toast.success("Payment confirmed. Your VIP is active.");
+      // Header badge, locked screens and generate buttons all read the subscription on the server.
+      void queryClient.invalidateQueries({ queryKey: ["subscription"] });
       router.refresh();
     }
-  }, [confirmed, checkout, paid, router]);
+  }, [confirmed, checkout, paid, router, queryClient]);
 
   // Leave nothing behind once the user moves on from a confirmed payment.
   useEffect(
@@ -139,27 +165,29 @@ export function Upgrade({
     [],
   );
 
-  const checking = verify.isFetching;
-  const gaveUp = (queryClient.getQueryState(["payment", reference])?.dataUpdateCount ?? 0) >= MAX_POLLS;
+  const checking = verify.isPending || coolingDown;
+  const polls = queryClient.getQueryState(["subscription", reference, round])?.dataUpdateCount ?? 0;
+  const gaveUp = polls >= MAX_POLLS;
 
   if (paid) {
+    const detail = sub?.expDate
+      ? ` VIP active until ${sub.expDate} (${sub.daysLeft} day${sub.daysLeft === 1 ? "" : "s"}).`
+      : "";
     return (
       <div className="qo-card qo-notice is-ok" role="status">
         <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} aria-hidden="true" />
-        <p>Payment confirmed. You can now generate codes from the Generate page.</p>
+        <p>Payment confirmed.{detail} You can now generate codes from the Generate page.</p>
       </div>
     );
   }
 
   const status = verify.isError
-    ? `${verify.error.message} We'll keep trying.`
-    : manualTried && !checking
-      ? "We haven't received it yet. Bank transfers can take a minute. We'll keep checking."
-      : gaveUp
-        ? "We stopped checking automatically. Tap I've paid to check again."
-        : lapsed
-          ? "Automatic checking has stopped for this account."
-          : "Checking automatically every few seconds.";
+    ? `${verify.error.message} We'll keep checking.`
+    : gaveUp
+      ? "Payment not confirmed yet. If you already paid, it can take a few minutes. Your access will unlock automatically."
+      : manualTried && !checking
+        ? "We haven't received it yet. Bank transfers can take a minute. We'll keep checking."
+        : "Checking automatically every few seconds.";
 
   return (
     <div className="qo-upgrade-grid">
@@ -191,10 +219,12 @@ export function Upgrade({
           lapsed={lapsed}
           checking={checking}
           status={status}
-          onPaid={async () => {
+          onPaid={() => {
             setManualTried(true);
-            await verify.refetch();
+            verify.mutate();
           }}
+          showCheckAgain={gaveUp}
+          onCheckAgain={() => setRound((r) => r + 1)}
           onNewPayment={() => {
             writeStored(null);
             start.mutate();

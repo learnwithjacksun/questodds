@@ -7,7 +7,7 @@ export async function POST() {
   if (!guard.ok) return guard.response;
 
   try {
-    return NextResponse.json(await stopQuestSpecial(guard.telegramId));
+    return NextResponse.json(await stopQuestSpecial(guard.apiUserId));
   } catch (err) {
     return upstreamError(err, "Couldn't stop Quest Special. Try again.");
   }

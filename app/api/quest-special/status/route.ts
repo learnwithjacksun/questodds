@@ -10,7 +10,7 @@ export async function GET() {
   if (!guard.ok) return guard.response;
 
   try {
-    const status = await getQuestSpecialStatus(guard.telegramId);
+    const status = await getQuestSpecialStatus(guard.apiUserId);
     const last = status.lastResult;
     if (!status.active && last) {
       // Record how the scan ended once (the log is keyed by the result's own timestamp).

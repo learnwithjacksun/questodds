@@ -32,7 +32,7 @@ async function UserBody({ params }: { params: Promise<{ id: string }> }) {
 
   // Live lookups are on demand and independent: one failing must not hide the rest.
   const [subscription, stats, payments, runs, trail] = await Promise.all([
-    telegramId ? getSubscription(telegramId).catch(() => null) : null,
+    getSubscription(String(user._id)).catch(() => null),
     telegramId ? getUserStats(telegramId).catch(() => null) : null,
     Payment.find({ userId: id }).sort({ createdAt: -1 }).limit(10).lean(),
     Generation.find({ userId: id }).sort({ at: -1 }).limit(10).lean(),

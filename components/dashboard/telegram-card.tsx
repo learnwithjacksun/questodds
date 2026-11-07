@@ -59,14 +59,17 @@ export function TelegramCard({ linked }: { linked: { username: string | null } |
             )}
           </div>
           {confirming && (
-            <p className="qo-fine">You won&apos;t be able to generate codes here until you link again.</p>
+            <p className="qo-fine">
+              Your subscription stays on your account here, but the Telegram bot won&apos;t recognise you until
+              you link again.
+            </p>
           )}
         </>
       ) : (
         <>
           <p>
-            Link your Telegram account to use your subscription here. If you already subscribed in the
-            bot, it unlocks the website automatically.
+            Optional. Link Telegram to use the same subscription in the bot, and to see your stats and
+            history. You can subscribe and use the website without it.
           </p>
           <div className="qo-card-actions">
             <TelegramButton intent="link" className="qo-btn-primary qo-btn-sm">

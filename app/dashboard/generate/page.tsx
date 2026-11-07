@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, Crown02Icon } from "@hugeicons/core-free-icons";
-import { TelegramLogo } from "@/components/telegram/logo";
 import { Generator } from "@/components/dashboard/generator";
 import { Locked, PageHead, Skeleton } from "@/components/dashboard/ui";
 import { requireUser, type CurrentUser } from "@/lib/auth/current-user";
@@ -16,17 +15,6 @@ export const metadata: Metadata = { title: "Generate – Quest Codes" };
 async function GenerateBody({ user, sport }: { user: CurrentUser; sport?: string }) {
   const access = await getAccess(user);
 
-  if (!access.linked) {
-    return (
-      <Locked
-        icon={<TelegramLogo size={24} />}
-        title="Link your Telegram first"
-        body="Your subscription lives on your Telegram account. Link it in Settings to unlock code generation."
-        href="/dashboard/settings"
-        cta="Link Telegram"
-      />
-    );
-  }
   if (access.unavailable) {
     return (
       <Locked
@@ -43,7 +31,7 @@ async function GenerateBody({ user, sport }: { user: CurrentUser; sport?: string
       <Locked
         icon={<HugeiconsIcon icon={Crown02Icon} size={22} />}
         title="A VIP subscription is required"
-        body={`VIP is ${VIP_PRICE_SUMMARY}, paid by bank transfer. If you already subscribed in the Telegram bot, it unlocks here automatically.`}
+        body={`VIP is ${VIP_PRICE_SUMMARY}, paid by bank transfer. No Telegram needed. A plan bought in the Telegram bot unlocks here too.`}
         href="/dashboard/upgrade"
         cta="See pricing"
       />

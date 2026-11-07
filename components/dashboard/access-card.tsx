@@ -1,23 +1,12 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, CheckmarkCircle02Icon, Crown02Icon } from "@hugeicons/core-free-icons";
-import { TelegramLogo } from "@/components/telegram/logo";
 import type { Access } from "@/lib/access";
 import { VIP_PRICE_SUMMARY } from "@/lib/plan";
 
 type View = { icon: React.ReactNode; tone: "ok" | "warn" | "idle"; title: string; body: string; href?: string; cta?: string };
 
 function describe(access: Access): View {
-  if (!access.linked) {
-    return {
-      icon: <TelegramLogo size={24} />,
-      tone: "idle",
-      title: "Link Telegram to get started",
-      body: "Your subscription is tied to your Telegram account. Link it once and you can generate codes here.",
-      href: "/dashboard/settings",
-      cta: "Link Telegram",
-    };
-  }
   if (access.unavailable) {
     return {
       icon: <HugeiconsIcon icon={Alert02Icon} size={22} />,
@@ -42,7 +31,7 @@ function describe(access: Access): View {
     icon: <HugeiconsIcon icon={Crown02Icon} size={22} />,
     tone: "idle",
     title: "No active subscription",
-    body: `VIP is ${VIP_PRICE_SUMMARY}. It unlocks code generation here and on the Telegram bot, and a plan bought on Telegram works here too.`,
+    body: `VIP is ${VIP_PRICE_SUMMARY}. It unlocks code generation here and in the Telegram bot. No Telegram needed to subscribe.`,
     href: "/dashboard/upgrade",
     cta: "Upgrade",
   };
