@@ -420,3 +420,17 @@
 .qo-qs-legs { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 12px; }
 .qo-qs-leg { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
 .qo-qs-leg:last-child { padding-bottom: 0; border-bottom: 0; }
+
+/* Football tiers */
+.qo-tiers { display: grid; gap: 14px; }
+.qo-tier-head { display: flex; align-items: center; gap: 8px; }
+.qo-tier-head .qo-badge { display: inline-flex; align-items: center; gap: 4px; }
+.qo-tier-blurb { margin-top: 6px; font-size: 13px; color: var(--muted); }
+.qo-tier.is-risk { border-color: rgba(229, 72, 77, 0.45); background: rgba(229, 72, 77, 0.04); }
+.qo-tier-empty { display: flex; flex-direction: column; gap: 2px; padding: 18px 22px; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 20px; color: var(--muted); font-size: 14px; }
+.qo-tier-empty strong { color: var(--text); font-weight: 600; }
+.qo-tier-note { display: flex; align-items: center; gap: 6px; margin-top: 14px; }
+.qo-why { margin-top: 10px; font-size: 14px; }
+.qo-why summary { cursor: pointer; font-weight: 600; }
+.qo-why ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
+.qo-card .qo-why li { margin: 2px 0; }

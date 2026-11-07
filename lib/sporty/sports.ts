@@ -10,7 +10,7 @@ import type { Sport } from "@/lib/sporty/schemas";
 export const SPORT_META: Record<Sport, { name: string; blurb: string; note: string; icon: IconSvgElement }> = {
   football: {
     name: "Football",
-    blurb: "Upcoming fixtures scanned, ranked and grouped into booking codes.",
+    blurb: "Upcoming fixtures scanned and sorted into up to three tiers: Banker, Safe and Long.",
     note: "Odds move and codes expire. Open the code on SportyBet to check current prices.",
     icon: FootballIcon,
   },

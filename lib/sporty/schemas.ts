@@ -55,14 +55,31 @@ export const telegramUserSchema = z.object({
 export type TelegramUser = z.infer<typeof telegramUserSchema>;
 
 /* ---------- Code generation ---------- */
+/** Football slips come in up to three tiers. An unknown tier from a newer API is treated as none. */
+export const TIERS = ["banker", "safe", "long"] as const;
+export const tierSchema = z.enum(TIERS);
+export type Tier = z.infer<typeof tierSchema>;
+
 export const sportyCodeSchema = z.object({
   code: z.string(),
   url: httpUrl,
   odds: z.number(),
   legsCount: z.number(),
   sport: z.string(),
+  /** Football only. */
+  tier: tierSchema.optional().catch(undefined),
+  /** Football only: estimated chance (0-1) that every leg wins. */
+  jointProb: z.number().optional(),
 });
 export type SportyCode = z.infer<typeof sportyCodeSchema>;
+
+/** Why a football tier produced no slip. */
+export const noSafeSlipTierSchema = z.object({
+  tier: tierSchema,
+  reasons: z.array(z.string()).default([]),
+  refreshDropped: z.array(z.string()).default([]),
+});
+export type NoSafeSlipTier = z.infer<typeof noSafeSlipTierSchema>;
 
 const generatedSchema = z.object({
   success: z.literal(true),
@@ -70,6 +87,9 @@ const generatedSchema = z.object({
   count: z.number(),
   cached: z.boolean().optional(),
   codes: z.array(sportyCodeSchema),
+  /** Football: "<TIER>: no safe slip right now (...)" for each missing tier. */
+  lines: z.array(z.string()).optional(),
+  noSafeSlip: z.array(noSafeSlipTierSchema).optional(),
   generatedAt: z.string().optional(),
 });
 const nothingQualifiedSchema = z.object({
@@ -78,6 +98,9 @@ const nothingQualifiedSchema = z.object({
   count: z.number().optional(),
   message: z.string().optional(),
   error: z.string().optional(),
+  /** Football, when no tier cleared its safety bar. A normal outcome, not an error. */
+  noSafeSlip: z.array(noSafeSlipTierSchema).optional(),
+  lines: z.array(z.string()).optional(),
 });
 export const generateResultSchema = z.discriminatedUnion("success", [
   generatedSchema,
