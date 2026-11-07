@@ -18,7 +18,7 @@ export function QuestSpecialCard({ tally, community = false }: { tally: Tally; c
         </span>
         <div>
           <h3>{QUEST_SPECIAL.name}</h3>
-          <p>{community ? "All users" : "Your single-leg live codes"}</p>
+          <p>{community ? "All users" : "Your live codes"}</p>
         </div>
       </div>
       <dl className="qo-qs-stats">

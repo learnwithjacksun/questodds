@@ -32,7 +32,7 @@ export const SPORT_META: Record<Sport, { name: string; blurb: string; note: stri
 export const QUEST_SPECIAL = {
   id: "quest_special",
   name: "Quest Special",
-  blurb: "Live vFootball scanner that mints a single-leg code when a match fits its rules.",
+  blurb: "Live vFootball scanner that mints a booking code only when a match clears its safety rules.",
   note: "Virtual football results are random. A matching rule doesn't make a code safe.",
   icon: Target01Icon,
 } as const;

@@ -92,48 +92,106 @@ export const generateRequestSchema = z.object({
 });
 export type GenerateRequest = z.infer<typeof generateRequestSchema>;
 
-/* ---------- Quest Special (live vFootball single-leg scanner) ---------- */
-const questSignalSchema = z.object({
-  /** null when a match qualified but SportyBet didn't mint a code. */
-  code: z.string().nullable(),
-  url: httpUrl.nullable(),
+/* ---------- Quest Special (live vFootball scanner) ---------- */
+export const QUEST_MODES = ["any", "handicap", "ou"] as const;
+export const questModeSchema = z.enum(QUEST_MODES);
+export type QuestMode = z.infer<typeof questModeSchema>;
+
+/** Body accepted by our own POST /api/quest-special/start. */
+export const questStartRequestSchema = z.object({
+  mode: questModeSchema.default("any"),
+  legs: z.number().int().min(1).max(10).default(1),
+});
+export type QuestStartRequest = z.infer<typeof questStartRequestSchema>;
+
+/** One picked leg: a whole single-leg result has the same fields, plus the slip's code. */
+const questLegSchema = z.object({
   home: z.string(),
   away: z.string(),
   league: z.string().optional(),
   minute: z.number(),
   homeScore: z.number(),
   awayScore: z.number(),
-  analysis: z.object({
-    window: z.string(),
-    type: z.string(),
-    description: z.string(),
-    odds: z.number(),
-    reasoning: z.string().optional(),
-  }),
-  timestamp: z.number(),
+  odds: z.number().optional(),
+  description: z.string().optional(),
+  reasoning: z.string().optional(),
+  /** Model probability (0-1) and safety score (0-100). */
+  prob: z.number().optional(),
+  safetyScore: z.number().optional(),
+  analysis: z
+    .object({
+      window: z.string().optional(),
+      type: z.string().optional(),
+      description: z.string().optional(),
+      odds: z.number().optional(),
+      reasoning: z.string().optional(),
+    })
+    .optional(),
 });
-export type QuestSignal = z.infer<typeof questSignalSchema>;
+export type QuestLeg = z.infer<typeof questLegSchema>;
 
-const questTimedOutSchema = z.object({ timedOut: z.literal(true), timestamp: z.number() });
+const questSlipBase = {
+  /** null when a slip qualified but SportyBet didn't mint a code. */
+  code: z.string().nullable(),
+  url: httpUrl.nullable(),
+  jointProb: z.number().optional(),
+  mode: z.string().optional(),
+  timestamp: z.number(),
+};
+
+const questSingleSchema = questLegSchema.extend({ isMultiLeg: z.literal(false).optional(), ...questSlipBase });
+const questMultiSchema = z.object({
+  isMultiLeg: z.literal(true),
+  legsCount: z.number().optional(),
+  totalOdds: z.number().optional(),
+  legs: z.array(questLegSchema),
+  ...questSlipBase,
+});
+
+/** Why a cycle ended without a slip. Absent/null when no match was inside a window. */
+const noSafeSlipSchema = z
+  .object({
+    reasons: z.array(z.string()).default([]),
+    considered: z.number().optional(),
+    inWindow: z.number().optional(),
+    rejected: z.record(z.string(), z.number()).optional(),
+    timestamp: z.number().optional(),
+  })
+  .nullish();
+export type NoSafeSlip = z.infer<typeof noSafeSlipSchema>;
+
+const questTimedOutSchema = z.object({
+  timedOut: z.literal(true),
+  timestamp: z.number(),
+  noSafeSlip: noSafeSlipSchema,
+});
+
+/** A number for normal users, "Unlimited" for admins. */
+const dailyCapSchema = z.union([z.number(), z.string()]);
 
 export const questSpecialStatusSchema = z.object({
   success: z.boolean(),
   active: z.boolean().optional(),
+  mode: z.string().optional(),
+  legs: z.number().optional(),
   scans: z.number().optional(),
   runningFor: z.number().optional(),
   dailyUsed: z.number().optional(),
-  maxDaily: z.number().optional(),
-  lastResult: z.union([questSignalSchema, questTimedOutSchema]).nullish(),
+  maxDaily: dailyCapSchema.optional(),
+  isUnlimited: z.boolean().optional(),
+  lastResult: z.union([questMultiSchema, questSingleSchema, questTimedOutSchema]).nullish(),
   error: z.string().optional(),
 });
 export type QuestSpecialStatus = z.infer<typeof questSpecialStatusSchema>;
+export type QuestSlip = z.infer<typeof questSingleSchema> | z.infer<typeof questMultiSchema>;
 
 export const questSpecialStartSchema = z.object({
   success: z.boolean(),
   message: z.string().optional(),
   error: z.string().optional(),
   dailyUsed: z.number().optional(),
-  maxDaily: z.number().optional(),
+  maxDaily: dailyCapSchema.optional(),
+  isUnlimited: z.boolean().optional(),
 });
 export type QuestSpecialStart = z.infer<typeof questSpecialStartSchema>;
 
@@ -143,9 +201,9 @@ export const questSpecialStopSchema = z.object({
   message: z.string().optional(),
 });
 
-/** True when a status result is a found signal rather than a timeout. */
-export function isQuestSignal(result: QuestSpecialStatus["lastResult"]): result is QuestSignal {
-  return !!result && "home" in result;
+/** True when a status result is a found slip (single or multi-leg) rather than a timeout. */
+export function isQuestSignal(result: QuestSpecialStatus["lastResult"]): result is QuestSlip {
+  return !!result && !("timedOut" in result);
 }
 
 /* ---------- Analytics ---------- */

@@ -17,6 +17,7 @@ import {
   type LatestSlip,
   type PaymentStatus,
   type QuestSpecialStart,
+  type QuestStartRequest,
   type QuestSpecialStatus,
   type Sport,
   type Subscription,
@@ -110,10 +111,13 @@ export function generateCodes(sport: Sport, userId: string, fresh = false): Prom
 
 /* ---------- Quest Special ---------- */
 
-export async function startQuestSpecial(userId: string): Promise<QuestSpecialStart> {
+export async function startQuestSpecial(
+  userId: string,
+  options: QuestStartRequest = { mode: "any", legs: 1 },
+): Promise<QuestSpecialStart> {
   const res = await request("/api/quest-special/start", questSpecialStartSchema, {
     method: "POST",
-    body: { userId },
+    body: { userId, mode: options.mode, legs: options.legs },
     timeoutMs: WRITE_TIMEOUT_MS,
   });
   if (!res.success) throw new SportyApiError(res.error ?? "Couldn't start Quest Special.", 403);
