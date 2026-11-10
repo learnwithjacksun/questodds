@@ -451,7 +451,9 @@
 .qo-pop h2 { margin: 12px 0 10px; font-size: 26px; line-height: 1.15; letter-spacing: -0.03em; }
 .qo-pop p { margin: 0 0 22px; color: var(--muted); line-height: 1.55; }
 .qo-pop-tag { display: inline-block; padding: 3px 12px; border-radius: 999px; background: linear-gradient(90deg, #00c2ff, #7b61ff 55%, #ff4fd8); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.qo-pop-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.qo-pop-actions { display: flex; flex-direction: column; gap: 10px; }
+.qo-pop-actions .qo-btn-primary, .qo-pop-actions .qo-btn-ghost { width: 100%; justify-content: center; cursor: pointer; }
+.qo-pop-actions .qo-btn-primary { border: 0; }
 @keyframes qo-pop-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes qo-pop-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .qo-pop, .qo-pop-backdrop { animation: none; } }

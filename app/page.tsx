@@ -5,6 +5,7 @@ import { Hero } from "@/components/landing/hero";
 import { Pricing } from "@/components/landing/pricing";
 import { Proof } from "@/components/landing/proof";
 import { Faq, HowItWorks, Services, TelegramSection } from "@/components/landing/sections";
+import { FootballUpdatePopup } from "@/components/dashboard/football-update-popup";
 import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
       <TelegramSection />
       <Faq />
       <SiteFooter />
+      <FootballUpdatePopup href="/register" cta="Get started" />
     </main>
   );
 }

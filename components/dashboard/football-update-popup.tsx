@@ -97,7 +97,14 @@ function Confetti() {
 }
 
 /** One-time announcement for the football upgrade. Remembered per browser. */
-export function FootballUpdatePopup() {
+export function FootballUpdatePopup({
+  href = "/dashboard/generate?sport=football",
+  cta = "Try Football",
+}: {
+  /** Where the main button goes. The landing page sends visitors to sign up. */
+  href?: string;
+  cta?: string;
+}) {
   const [open, setOpen] = useState(false);
   const primary = useRef<HTMLAnchorElement>(null);
 
@@ -149,11 +156,11 @@ export function FootballUpdatePopup() {
           <div className="qo-pop-actions">
             <Link
               ref={primary}
-              href="/dashboard/generate?sport=football"
+              href={href}
               className="qo-btn-primary"
               onClick={close}
             >
-              Try Football
+              {cta}
             </Link>
             <button type="button" className="qo-btn-ghost" onClick={close}>
               Maybe later
