@@ -145,7 +145,10 @@ export function Upgrade({
   const sub = verify.data?.subscription ?? watch.data;
   const activeNow = !!sub && ("unavailable" in sub ? !sub.unavailable : true) && sub.active;
   const renewed = activeNow && (sub?.expiresAt ?? 0) > (baselineExpiresAt ?? 0);
-  const confirmed = verify.data?.status === "paid" || renewed;
+  // "Already credited" is a normal success, but a voided duplicate checkout reports it too, so only
+  // trust it when the plan is actually active.
+  const paidByCheck = verify.data?.status === "paid" && (!verify.data.alreadyCredited || activeNow);
+  const confirmed = paidByCheck || renewed;
 
   useEffect(() => {
     if (confirmed && checkout && !paid) {
@@ -180,7 +183,10 @@ export function Upgrade({
     return (
       <div className="qo-card qo-notice is-ok" role="status">
         <HugeiconsIcon icon={CheckmarkCircle02Icon} size={22} aria-hidden="true" />
-        <p>Payment confirmed.{detail} You can now generate codes from the Generate page.</p>
+        <p>
+          {verify.data?.alreadyCredited ? "Your payment is already applied." : "Payment confirmed."}
+          {detail} You can now generate codes from the Generate page.
+        </p>
       </div>
     );
   }
@@ -188,7 +194,7 @@ export function Upgrade({
   const status = verify.isError
     ? `${verify.error.message} We'll keep checking.`
     : gaveUp
-      ? "Payment not confirmed yet. If you already paid, it can take a few minutes. Your access will unlock automatically."
+      ? "It can take a few minutes. Your access unlocks automatically."
       : manualTried && !checking
         ? "We haven't received it yet. Bank transfers can take a minute. We'll keep checking."
         : "Checking automatically every few seconds.";

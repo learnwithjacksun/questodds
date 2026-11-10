@@ -13,7 +13,13 @@ import {
   Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { CopyButton } from "@/components/dashboard/copy-button";
-import { FootballTiers, isTiered, NoSafeSlip } from "@/components/dashboard/football-tiers";
+import {
+  FootballTiers,
+  isTiered,
+  NoSafeSlip,
+  StatsVerifiedBadge,
+  StatsVerifiedLeagues,
+} from "@/components/dashboard/football-tiers";
 import { HttpError, postJson } from "@/lib/http";
 import { SPORTS, type GenerateRequest, type GenerateResult, type Sport } from "@/lib/sporty/schemas";
 import { QUEST_SPECIAL, SPORT_META, type Service } from "@/lib/sporty/sports";
@@ -29,16 +35,9 @@ const OPTIONS: { id: Service; name: string; icon: IconSvgElement }[] = [
 
 /** A fresh football run can take 1-3 minutes, so the browser waits past that. */
 const GENERATE_TIMEOUT_MS = 200_000;
-/** After a "busy" reply, wait, then retry a few times before giving up. */
-const BUSY_RETRY_MS = 10_000;
-const BUSY_MAX_RETRIES = 3;
-
-const FOOTBALL_STEPS = ["Analysing today's matches…", "Checking the latest odds…", "Building your slips…"];
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function progressMessage(seconds: number, sport: Sport): string {
-  if (sport === "football") return FOOTBALL_STEPS[Math.floor(seconds / 6) % FOOTBALL_STEPS.length];
+  if (sport === "football") return "Checking matches, odds and team stats…";
   if (seconds < 10) return "Scanning fixtures…";
   if (seconds < 45) return "Ranking legs and minting codes. This can take a minute or more.";
   return "Still working. The service may be waking up or waiting out SportyBet's rate limit.";
@@ -58,44 +57,30 @@ export function Generator({ initialService }: { initialService: Service }) {
   const [results, setResults] = useState<Results>({});
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
-  // True while waiting to retry after "another generation is running".
-  const [waiting, setWaiting] = useState(false);
   const [needsSubscription, setNeedsSubscription] = useState(false);
+  const [systemBusy, setSystemBusy] = useState(false);
 
   const generate = useMutation({
-    mutationFn: async (req: GenerateRequest) => {
-      for (let attempt = 0; ; attempt++) {
-        try {
-          return await postJson<GenerateResult>("/api/generate", req, { timeoutMs: GENERATE_TIMEOUT_MS });
-        } catch (err) {
-          const isBusy = err instanceof HttpError && err.status === 429;
-          if (!isBusy || attempt >= BUSY_MAX_RETRIES) {
-            if (isBusy) throw new Error("Still busy. Please try again in a minute.");
-            throw err;
-          }
-          setWaiting(true);
-          await sleep(BUSY_RETRY_MS);
-          setWaiting(false);
-        }
-      }
-    },
+    mutationFn: (req: GenerateRequest) =>
+      postJson<GenerateResult>("/api/generate", req, { timeoutMs: GENERATE_TIMEOUT_MS }),
     onMutate: () => {
       setStartedAt(Date.now());
       setNeedsSubscription(false);
+      setSystemBusy(false);
     },
     onSuccess: (data, req) => setResults((r) => ({ ...r, [req.sport]: data })),
     onError: (err: Error) => {
-      // No active subscription: send them to pay instead of showing a raw error.
       if (err instanceof HttpError && err.status === 403 && err.data.code === "subscription_required") {
+        // No active subscription: send them to pay instead of showing a raw error.
         setNeedsSubscription(true);
+      } else if (err instanceof HttpError && err.status === 429) {
+        // Busy: say so once. No automatic retrying.
+        setSystemBusy(true);
       } else {
         toast.error(err.message);
       }
     },
-    onSettled: () => {
-      setWaiting(false);
-      setStartedAt(null);
-    },
+    onSettled: () => setStartedAt(null),
   });
 
   useEffect(() => {
@@ -168,13 +153,18 @@ export function Generator({ initialService }: { initialService: Service }) {
         </button>
         {busy && (
           <p className="qo-progress-note" role="status">
-            {waiting
-              ? "Another generation is running. Retrying shortly…"
-              : progressMessage(elapsed, sport)}
-            {sport === "football" && !waiting && " This can take up to 3 minutes."}
+            {progressMessage(elapsed, sport)}
+            {sport === "football" && " This can take up to 3 minutes."}
+          </p>
+        )}
+        {systemBusy && !busy && (
+          <p className="qo-progress-note" role="status">
+            Busy, try again in a moment.
           </p>
         )}
       </div>
+
+      {sport === "football" && <StatsVerifiedLeagues />}
 
       {needsSubscription && !busy && (
         <div className="qo-card qo-notice" role="status">
@@ -210,12 +200,15 @@ export function Generator({ initialService }: { initialService: Service }) {
                 )}
               </div>
               {tiered ? (
-                <FootballTiers codes={result.codes} />
+                <FootballTiers codes={result.codes} lines={result.lines} />
               ) : (
                 result.codes.map((c) => (
                   <article className="qo-code-card" key={c.code}>
                     <div className="qo-code-main">
-                      <span className="qo-code-label">Booking code</span>
+                      <span className="qo-tier-head">
+                        <span className="qo-code-label">Booking code</span>
+                        <StatsVerifiedBadge code={c} />
+                      </span>
                       <strong className="qo-code-value">{c.code}</strong>
                       <span className="qo-code-meta">
                         {c.odds.toFixed(2)} odds · {c.legsCount} legs

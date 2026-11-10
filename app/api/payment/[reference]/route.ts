@@ -45,7 +45,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ referen
 
   const [payment, subscription] = await Promise.allSettled([
     alreadyPaid
-      ? Promise.resolve<PaymentStatus>({ success: true, status: "paid" })
+      ? Promise.resolve<PaymentStatus>({ success: true, status: "paid", alreadyCredited: true })
       : concurrent
         ? Promise.resolve<PaymentStatus>({ success: false, status: "unknown" })
         : verifyPayment(reference).finally(() => checking.delete(reference)),
@@ -59,6 +59,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ referen
   const body: PaymentCheck = {
     status: payment.status === "fulfilled" ? (payment.value.status ?? "unpaid") : "unknown",
     message: payment.status === "fulfilled" ? payment.value.message : undefined,
+    alreadyCredited: payment.status === "fulfilled" ? payment.value.alreadyCredited : undefined,
     subscription: subscription.status === "fulfilled" ? subscription.value : null,
   };
   if (body.status === "paid") after(() => markPaid(reference));

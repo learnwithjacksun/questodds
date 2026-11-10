@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { after } from "next/server";
 import { DashNav, DashNavSkeleton } from "@/components/dashboard/nav";
+import { FootballUpdatePopup } from "@/components/dashboard/football-update-popup";
 import { SiteFooter } from "@/components/site-footer";
 import { PageLoader } from "@/components/page-loader";
 import { requireUser } from "@/lib/auth/current-user";
@@ -25,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       <SiteFooter className="is-dash" />
+      <FootballUpdatePopup />
     </div>
   );
 }

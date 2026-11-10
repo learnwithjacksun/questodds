@@ -84,6 +84,8 @@ export const sportyCodeSchema = z.object({
   jointProb: z.number().optional(),
   /** High Roller and Legend only. */
   highRisk: z.boolean().optional(),
+  /** Football: at least one leg was checked against live team stats. */
+  statsVerified: z.boolean().optional(),
 });
 export type SportyCode = z.infer<typeof sportyCodeSchema>;
 
@@ -341,6 +343,8 @@ export const paymentStatusSchema = z.object({
   chatId: z.string().optional(),
   reference: z.string().optional(),
   amount: z.number().optional(),
+  /** True when this reference was credited earlier. A normal, successful outcome. */
+  alreadyCredited: z.boolean().optional(),
 });
 export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
 
@@ -349,6 +353,7 @@ export type PaymentCheck = {
   /** "paid" once the external API confirms it; anything else (e.g. "unpaid") means not yet. */
   status: string;
   message?: string;
+  alreadyCredited?: boolean;
   /** null when the subscription lookup failed (don't treat that as "not subscribed"). */
   subscription: Subscription | null;
 };

@@ -28,6 +28,18 @@ export const SPORT_META: Record<Sport, { name: string; blurb: string; note: stri
   },
 };
 
+/**
+ * Football leagues whose matches are additionally checked against live team stats. Matches from
+ * every other league are still used, just not stats-audited. Edit here when the list changes.
+ */
+export const STATS_VERIFIED_LEAGUES = [
+  { name: "Premier League", country: "England" },
+  { name: "La Liga", country: "Spain" },
+  { name: "Serie A", country: "Italy" },
+  { name: "Bundesliga", country: "Germany" },
+  { name: "Ligue 1", country: "France" },
+] as const;
+
 /** Quest Special isn't a normal preset: it's a live scanner with its own start/poll/stop flow. */
 export const QUEST_SPECIAL = {
   id: "quest_special",

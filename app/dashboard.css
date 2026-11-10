@@ -425,7 +425,7 @@
 
 /* Football tiers */
 .qo-tiers { display: grid; gap: 14px; }
-.qo-tier-head { display: flex; align-items: center; gap: 8px; }
+.qo-tier-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .qo-tier-blurb { margin-top: 6px; font-size: 13px; color: var(--muted); }
 .qo-tier { border-left: 4px solid var(--tier, rgba(0, 0, 0, 0.12)); }
 .qo-tier.is-rookie { --tier: #5bb98c; }
@@ -436,3 +436,22 @@
 .qo-tier-empty { display: flex; flex-direction: column; gap: 2px; padding: 18px 22px; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 20px; color: var(--muted); font-size: 14px; }
 .qo-tier-empty strong { color: var(--text); font-weight: 600; }
 .qo-tier-note { margin-top: 14px; }
+.qo-verified { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; background: rgba(23, 201, 100, 0.12); color: #0f7a3c; font-size: 12px; font-weight: 600; cursor: help; }
+.qo-leagues { margin: 16px 0 18px; padding: 4px 2px; }
+.qo-leagues h4 { margin: 0 0 8px; font-size: 14px; }
+.qo-leagues ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; padding: 0; list-style: none; }
+.qo-leagues li { padding: 5px 12px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 999px; font-size: 13px; font-weight: 600; }
+.qo-leagues li span { font-weight: 400; color: var(--muted); }
+.qo-leagues p { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* Football update popup */
+.qo-confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1100; pointer-events: none; }
+.qo-pop-backdrop { position: fixed; inset: 0; z-index: 1050; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(10, 10, 20, 0.45); backdrop-filter: blur(3px); animation: qo-pop-fade 0.2s ease-out; }
+.qo-pop { position: relative; width: 100%; max-width: 440px; padding: 32px 28px 26px; background: #fff; border-radius: 24px; box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28); animation: qo-pop-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.qo-pop h2 { margin: 12px 0 10px; font-size: 26px; line-height: 1.15; letter-spacing: -0.03em; }
+.qo-pop p { margin: 0 0 22px; color: var(--muted); line-height: 1.55; }
+.qo-pop-tag { display: inline-block; padding: 3px 12px; border-radius: 999px; background: linear-gradient(90deg, #00c2ff, #7b61ff 55%, #ff4fd8); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.qo-pop-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+@keyframes qo-pop-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes qo-pop-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .qo-pop, .qo-pop-backdrop { animation: none; } }
