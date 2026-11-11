@@ -5,12 +5,12 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { Sport } from "@/lib/sporty/schemas";
+import type { Sport, Tier } from "@/lib/sporty/schemas";
 
 export const SPORT_META: Record<Sport, { name: string; blurb: string; note: string; icon: IconSvgElement }> = {
   football: {
     name: "Football",
-    blurb: "Upcoming fixtures sorted into up to four tiers, from Rookie to Legend.",
+    blurb: "Pick a tier, from Rookie to Moonshot. Each run builds one tier from upcoming fixtures.",
     note: "Odds move and codes expire. Check current prices on SportyBet.",
     icon: FootballIcon,
   },
@@ -27,6 +27,26 @@ export const SPORT_META: Record<Sport, { name: string; blurb: string; note: stri
     icon: ComputerIcon,
   },
 };
+
+/**
+ * The football tiers, in display order. The one place for order, copy and the long-shot flag.
+ * Never describe a tier as safe, guaranteed or sure, and never show a win percentage.
+ */
+export const FOOTBALL_TIERS: readonly {
+  slug: Tier;
+  name: string;
+  blurb: string;
+  oddsHint: string;
+  legsHint: string;
+  highRisk: boolean;
+}[] = [
+  { slug: "rookie", name: "Rookie", blurb: "Low risk starter", oddsHint: "Low odds", legsHint: "~4 legs", highRisk: false },
+  { slug: "hustler", name: "Hustler", blurb: "Balanced accumulator", oddsHint: "Mid odds", legsHint: "~8 legs", highRisk: false },
+  { slug: "high_roller", name: "High Roller", blurb: "Higher payout", oddsHint: "About @10", legsHint: "More legs", highRisk: true },
+  { slug: "legend", name: "Legend", blurb: "Big payout long shot", oddsHint: "@100+", legsHint: "Up to 50 legs", highRisk: true },
+  { slug: "tycoon", name: "Tycoon", blurb: "Very long shot", oddsHint: "@500 to @700", legsHint: "Many legs", highRisk: true },
+  { slug: "moonshot", name: "Moonshot", blurb: "Extreme long shot", oddsHint: "@700 to @1400", legsHint: "Many legs", highRisk: true },
+];
 
 /**
  * Football leagues whose matches are additionally checked against live team stats. Matches from

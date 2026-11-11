@@ -66,10 +66,11 @@ export const telegramUserSchema = z.object({
 export type TelegramUser = z.infer<typeof telegramUserSchema>;
 
 /* ---------- Code generation ---------- */
-/** Football slips come in up to four tiers. An unknown tier from a newer API is treated as none. */
-export const TIERS = ["rookie", "hustler", "high_roller", "legend"] as const;
+/** Football slips come in up to six tiers. An unknown tier from a newer API is treated as none. */
+export const TIERS = ["rookie", "hustler", "high_roller", "legend", "tycoon", "moonshot"] as const;
 export const tierSchema = z.enum(TIERS);
 export type Tier = z.infer<typeof tierSchema>;
+export type FootballTier = Tier;
 
 export const sportyCodeSchema = z.object({
   code: z.string(),
@@ -82,7 +83,7 @@ export const sportyCodeSchema = z.object({
   tierName: z.string().optional(),
   /** Football only: estimated chance (0-1). Internal use only, never shown to users. */
   jointProb: z.number().optional(),
-  /** High Roller and Legend only. */
+  /** High Roller, Legend, Tycoon and Moonshot. */
   highRisk: z.boolean().optional(),
   /** Football: at least one leg was checked against live team stats. */
   statsVerified: z.boolean().optional(),
@@ -107,6 +108,8 @@ const generatedSchema = z.object({
   /** Football: an entry per missing tier. Not shown to users. */
   lines: z.array(z.string()).optional(),
   noSafeSlip: z.array(noSafeSlipTierSchema).optional(),
+  /** Football: the tiers that were attempted. */
+  requestedTiers: z.array(tierSchema).optional().catch(undefined),
   generatedAt: z.string().optional(),
 });
 const nothingQualifiedSchema = z.object({
@@ -117,6 +120,7 @@ const nothingQualifiedSchema = z.object({
   error: z.string().optional(),
   /** Football, when no tier cleared its safety bar. A normal outcome, not an error. */
   noSafeSlip: z.array(noSafeSlipTierSchema).optional(),
+  requestedTiers: z.array(tierSchema).optional().catch(undefined),
   lines: z.array(z.string()).optional(),
 });
 export const generateResultSchema = z.discriminatedUnion("success", [
@@ -129,6 +133,10 @@ export type GenerateResult = z.infer<typeof generateResultSchema>;
 export const generateRequestSchema = z.object({
   sport: sportSchema,
   fresh: z.boolean().optional(),
+  /** Football only: one tier per request... */
+  tier: tierSchema.optional(),
+  /** ...or an explicit list (the "All tiers" run). */
+  tiers: z.array(tierSchema).min(1).optional(),
 });
 export type GenerateRequest = z.infer<typeof generateRequestSchema>;
 

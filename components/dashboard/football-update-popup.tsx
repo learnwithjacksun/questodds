@@ -149,9 +149,9 @@ export function FootballUpdatePopup({
           <span className="qo-pop-tag">New</span>
           <h2 id="qo-pop-title">Football predictions just got better</h2>
           <p>
-            Every upcoming match is scanned, and picks in the{" "}
-            {STATS_VERIFIED_LEAGUES.map((l) => l.name).join(", ")} are now checked against live team
-            stats.
+            Football picks now come with an extra layer of checks. Matches in the{" "}
+            {STATS_VERIFIED_LEAGUES.map((l) => l.name).join(", ")} are also reviewed against live team
+            stats, and codes show a &ldquo;Stats verified&rdquo; badge when it applies.
           </p>
           <div className="qo-pop-actions">
             <Link

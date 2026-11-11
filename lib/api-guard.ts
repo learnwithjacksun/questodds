@@ -49,7 +49,11 @@ export function upstreamError(err: unknown, fallback: string): NextResponse {
   if (err instanceof SportyApiError) {
     const clientError = err.status !== undefined && err.status >= 400 && err.status < 500;
     return NextResponse.json(
-      { error: err.message, ...(err.code ? { code: err.code } : {}) },
+      {
+        error: err.message,
+        ...(err.code ? { code: err.code } : {}),
+        ...(err.validTiers ? { validTiers: err.validTiers } : {}),
+      },
       { status: clientError ? err.status : 502 },
     );
   }

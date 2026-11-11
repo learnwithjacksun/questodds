@@ -17,6 +17,11 @@ export async function POST(req: Request) {
   const parsed = generateRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Choose a service" }, { status: 400 });
 
+  // Football always names its tiers (one, or the explicit full list), never "nothing".
+  if (parsed.data.sport === "football" && !parsed.data.tier && !parsed.data.tiers?.length) {
+    return NextResponse.json({ error: "Choose a tier" }, { status: 400 });
+  }
+
   const { user, apiUserId } = guard;
   if (inFlight.has(user.id)) {
     return NextResponse.json({ error: "A generation is already running for you" }, { status: 429 });
@@ -24,7 +29,10 @@ export async function POST(req: Request) {
   inFlight.add(user.id);
   const started = Date.now();
   try {
-    const result = await generateCodes(parsed.data.sport, apiUserId, parsed.data.fresh);
+    const result = await generateCodes(parsed.data.sport, apiUserId, parsed.data.fresh, {
+      tier: parsed.data.tier,
+      tiers: parsed.data.tiers,
+    });
     const codes = "codes" in result && Array.isArray(result.codes) ? result.codes.length : 0;
     after(() => logGeneration({ userId: user.id, service: parsed.data.sport, ok: true, codes, started }));
     return NextResponse.json(result);

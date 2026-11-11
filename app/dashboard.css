@@ -457,3 +457,36 @@
 @keyframes qo-pop-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes qo-pop-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .qo-pop, .qo-pop-backdrop { animation: none; } }
+
+/* Football tier picker */
+.qo-tier.is-tycoon { --tier: #c026d3; background: rgba(192, 38, 211, 0.05); }
+.qo-tier.is-moonshot { --tier: #312e81; background: linear-gradient(90deg, rgba(49, 46, 129, 0.10), rgba(49, 46, 129, 0.02)); }
+.qo-tierpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+.qo-tierpick-card { --tier: rgba(0, 0, 0, 0.2); position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 16px 16px 16px 18px; text-align: left; font: inherit; color: inherit; background: #fff; border: 1px solid rgba(0, 0, 0, 0.12); border-left: 4px solid var(--tier); border-radius: 16px; cursor: pointer; transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s; }
+.qo-tierpick-card.is-rookie { --tier: #5bb98c; }
+.qo-tierpick-card.is-hustler { --tier: #3b9be8; }
+.qo-tierpick-card.is-roller { --tier: #7b61ff; }
+.qo-tierpick-card.is-legend { --tier: #e0a21b; }
+.qo-tierpick-card.is-tycoon { --tier: #c026d3; }
+.qo-tierpick-card.is-moonshot { --tier: #312e81; }
+.qo-tierpick-card:hover:not(:disabled) { border-color: var(--tier); transform: translateY(-1px); }
+.qo-tierpick-card.is-selected { box-shadow: 0 0 0 2px var(--tier); }
+.qo-tierpick-card:disabled { opacity: 0.55; cursor: not-allowed; }
+.qo-tierpick-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.qo-tierpick-top strong { font-size: 16px; letter-spacing: -0.01em; }
+.qo-tierpick-blurb { font-size: 13.5px; font-weight: 500; }
+.qo-tierpick-hint { font-size: 12.5px; color: var(--muted); }
+.qo-tierpick-warn { margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.qo-tierpick-done { position: absolute; right: 12px; bottom: 10px; font-size: 11.5px; font-weight: 600; color: #0f7a3c; }
+.qo-just { margin: 0; }
+@media (max-width: 809px) { .qo-tierpick { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .qo-tierpick { grid-template-columns: 1fr; } }
+.qo-tierpick-all { position: relative; grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 14px 18px; text-align: left; font: inherit; color: inherit; background: transparent; border: 1.5px dashed rgba(0, 0, 0, 0.3); border-radius: 16px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.qo-tierpick-all strong { font-size: 15px; }
+.qo-tierpick-all span { font-size: 13px; color: var(--muted); }
+.qo-tierpick-all:hover:not(:disabled) { border-color: var(--text); }
+.qo-tierpick-all.is-selected { border-style: solid; border-color: var(--text); box-shadow: 0 0 0 1.5px var(--text); }
+.qo-tierpick-all:disabled { opacity: 0.55; cursor: not-allowed; }
+.qo-tierpick-all .qo-tierpick-done { position: static; margin-left: auto; color: #0f7a3c; }
+.qo-alltiers { display: grid; gap: 14px; }
+.qo-alltiers .qo-results-head { margin-top: 4px; }

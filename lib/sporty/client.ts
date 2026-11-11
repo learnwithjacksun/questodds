@@ -21,6 +21,7 @@ import {
   type QuestSpecialStatus,
   type Sport,
   type Subscription,
+  type Tier,
   type UserStats,
 } from "@/lib/sporty/schemas";
 
@@ -41,6 +42,8 @@ export class SportyApiError extends Error {
     readonly status?: number,
     /** Machine-readable reason from the service, e.g. "subscription_required". */
     readonly code?: string,
+    /** Sent with an "invalid_tier" 400. For development logging only. */
+    readonly validTiers?: string[],
   ) {
     super(message);
     this.name = "SportyApiError";
@@ -82,7 +85,11 @@ async function request<S extends z.ZodType>(
       json && typeof json === "object" && "code" in json && typeof json.code === "string"
         ? json.code
         : undefined;
-    throw new SportyApiError(message, res.status, code);
+    const validTiers =
+      json && typeof json === "object" && "validTiers" in json && Array.isArray(json.validTiers)
+        ? json.validTiers.filter((t): t is string => typeof t === "string")
+        : undefined;
+    throw new SportyApiError(message, res.status, code, validTiers);
   }
 
   const parsed = schema.safeParse(json);
@@ -108,10 +115,22 @@ export async function getSubscription(id: string): Promise<Subscription> {
 
 /* ---------- Generation ---------- */
 
-export function generateCodes(sport: Sport, userId: string, fresh = false): Promise<GenerateResult> {
+export function generateCodes(
+  sport: Sport,
+  userId: string,
+  fresh = false,
+  pick: { tier?: Tier; tiers?: Tier[] } = {},
+): Promise<GenerateResult> {
   return request("/api/generate", generateResultSchema, {
     method: "POST",
-    body: { sport, userId, fresh },
+    // Tier choices apply to football only; the service ignores them for the other sports.
+    body: {
+      sport,
+      userId,
+      fresh,
+      ...(sport === "football" && pick.tiers?.length ? { tiers: pick.tiers } : {}),
+      ...(sport === "football" && !pick.tiers?.length && pick.tier ? { tier: pick.tier } : {}),
+    },
     timeoutMs: GENERATE_TIMEOUT_MS,
   });
 }
